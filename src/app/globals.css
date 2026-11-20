@@ -141,7 +141,7 @@ a { color: var(--accent); text-decoration: none; }
     padding: 9px 12px; border-radius: 10px;
     font-weight: 500; color: var(--muted);
   }
-  .sidebar a:hover { color: var(--ink); }
+  @media (hover: hover) and (pointer: fine) { .sidebar a:hover { color: var(--ink); } }
   .sidebar a[aria-current='page'] { background: var(--surface-2); color: var(--ink); }
   .sidebar a[aria-current='page'] svg { color: var(--accent); }
   .sidebar svg { width: 19px; height: 19px; }
@@ -352,7 +352,7 @@ input[type='checkbox']:checked::after { transform: translateX(18px); }
 .formgrid .wide { grid-column: 1 / -1; }
 .formgrid .field { width: 100%; }
 .mini { appearance: none; width: 34px; height: 34px; border: 0; border-radius: 50%; background: transparent; color: var(--muted); display: inline-grid; place-items: center; }
-.mini:hover { background: var(--surface-2); color: var(--ink); }
+@media (hover: hover) and (pointer: fine) { .mini:hover { background: var(--surface-2); color: var(--ink); } }
 
 .banner { padding: 12px 14px; border-radius: 12px; background: var(--accent-soft); color: var(--ink); font-size: 14px; margin-bottom: 12px; }
 .banner.warn { background: rgba(214, 140, 30, 0.12); }
@@ -556,9 +556,6 @@ h2 { font-size: 15px; margin: 22px 0 6px; }
 .fx-set.on { background: var(--accent); color: var(--on-accent); box-shadow: none; }
 .fx-set.at { box-shadow: 0 0 0 2px var(--ink); color: var(--ink); }
 .fx-set.on.at { box-shadow: 0 0 0 2px var(--bg), 0 0 0 4px var(--accent); color: var(--on-accent); }
-.fx-set.at:not(.on) { animation: fx-glow 2.4s ease-in-out infinite; }
-@keyframes fx-glow { 50% { box-shadow: 0 0 0 2px var(--ink), 0 0 0 7px var(--accent-soft); } }
-@media (prefers-reduced-motion: reduce) { .fx-set.at:not(.on) { animation: none; } }
 .fx-hint { margin: 18px 0 0; font-size: 12.5px; color: var(--muted); }
 .fx-edit { width: 100%; max-width: 360px; margin-top: 12px; }
 .fx-btns { width: 100%; display: grid; grid-template-columns: repeat(auto-fit, minmax(0, 1fr)); gap: 10px; margin-top: auto; padding-top: 24px; }
@@ -592,3 +589,27 @@ h2 { font-size: 15px; margin: 22px 0 6px; }
 .upnext .done .nm { color: var(--muted); }
 .upnext .sm { font-size: 12.5px; color: var(--muted); white-space: nowrap; }
 .upnext .done .sm, .upnext .part .sm { color: var(--accent); }
+
+/* ---------- native feel + motion polish ---------- */
+:root { --ease-out: cubic-bezier(0.23, 1, 0.32, 1); }
+html { -webkit-tap-highlight-color: transparent; overscroll-behavior: none; }
+button, a, [role='button'], label { touch-action: manipulation; }
+button, [role='button'], .chip, .tabbar a, .sidebar a { user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
+
+/* Press feedback lands on touch-down, fast and ease-out. */
+.fx-btns button, .fx-set, .fx-big, .chip, .btn, .daybtn, .upnext li button, .fnav button {
+  transition: transform 140ms var(--ease-out), background-color 160ms var(--ease-out), box-shadow 160ms var(--ease-out), color 160ms var(--ease-out);
+}
+.fx-btns button:active { transform: scale(0.97); }
+.fx-set:active { transform: scale(0.94); }
+.fx-big:active { transform: scale(0.98); }
+.btn:active, .chip:active { transform: scale(0.97); }
+.upnext li button:active { background: var(--surface-2); }
+
+/* Moving between exercises: slide in from the side you swiped toward. */
+.fx.from-next { animation: fx-in-next 260ms var(--ease-out); }
+.fx.from-prev { animation: fx-in-prev 260ms var(--ease-out); }
+@keyframes fx-in-next { from { opacity: 0; transform: translateX(28px); } }
+@keyframes fx-in-prev { from { opacity: 0; transform: translateX(-28px); } }
+@media (prefers-reduced-motion: reduce) { .fx.from-next, .fx.from-prev { animation: fx-fade 160ms ease-out; } }
+@keyframes fx-fade { from { opacity: 0; } }

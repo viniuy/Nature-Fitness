@@ -144,12 +144,13 @@ function Workout({ program, day, cur, sessions, date, today, saved, update, pick
   const firstOpen = () => Math.max(0, exs.findIndex((ex) => doneCount(ex) < ex.sets));
   const [idx, setIdx] = useState(firstOpen);
   const [panel, setPanel] = useState(false);
+  const [dir, setDir] = useState<'' | 'from-next' | 'from-prev'>('');
   const touch = useRef<number | null>(null);
   useEffect(() => { setIdx(firstOpen()); }, [day.id, date]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const i = Math.min(idx, exs.length - 1);
   const ex = exs[i];
-  const go = (n: number) => { setIdx(Math.max(0, Math.min(exs.length - 1, n))); window.scrollTo({ top: 0, behavior: 'smooth' }); };
+  const go = (n: number) => { setDir(n > i ? 'from-next' : n < i ? 'from-prev' : ''); setIdx(Math.max(0, Math.min(exs.length - 1, n))); window.scrollTo({ top: 0, behavior: 'smooth' }); };
   const loggedDays = new Set(sessions.filter((s) => s.date === date).map((s) => s.dayId));
   const lastFor = (e: Exercise) => historyFor(sessions, e.id, cur.id)[0]?.sets[e.id] ?? [];
 
@@ -198,7 +199,7 @@ function Workout({ program, day, cur, sessions, date, today, saved, update, pick
           if (Math.abs(dx) > 70) go(i + (dx < 0 ? 1 : -1));
         }}
       >
-        <ExerciseFocus key={ex.id + cur.id} ex={ex} cur={cur} sessions={sessions} update={update} />
+        <ExerciseFocus key={ex.id + cur.id} ex={ex} cur={cur} sessions={sessions} update={update} motion={dir} />
         <div className="fnav">
           <button type="button" disabled={i === 0} onClick={() => go(i - 1)}>{i > 0 ? `‹ ${exs[i - 1].name}` : ''}</button>
           <button type="button" className={doneCount(ex) >= ex.sets ? 'ready' : ''} disabled={i === exs.length - 1} onClick={() => go(i + 1)}>
@@ -230,8 +231,8 @@ function Workout({ program, day, cur, sessions, date, today, saved, update, pick
   );
 }
 
-function ExerciseFocus({ ex, cur, sessions, update }: {
-  ex: Exercise; cur: Session; sessions: Session[]; update: (fn: (s: Session) => Session) => void;
+function ExerciseFocus({ ex, cur, sessions, update, motion }: {
+  ex: Exercise; cur: Session; sessions: Session[]; update: (fn: (s: Session) => Session) => void; motion: string;
 }) {
   const unit = ex.unit;
   const hist = useMemo(() => historyFor(sessions, ex.id, cur.id), [sessions, ex.id, cur.id]);
@@ -285,7 +286,7 @@ function ExerciseFocus({ ex, cur, sessions, update }: {
   const lastText = summary(unit, prevSets);
 
   return (
-    <div className="fx">
+    <div className={`fx ${motion}`}>
       <div className="fx-head">
         <h1 className="fx-name">{ex.name}{isPr && <span className="pr">PR</span>}</h1>
         <p className="fx-last">{lastText ? `Last time ${lastText}` : 'First time'}</p>
