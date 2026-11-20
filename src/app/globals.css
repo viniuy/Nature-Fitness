@@ -464,3 +464,27 @@ h2 { font-size: 15px; margin: 22px 0 6px; }
 .bodymap { max-width: 340px; }
 .rankhero { margin-bottom: 4px; gap: 12px; }
 .rankhero .name { font-size: 20px; }
+
+/* ---------- one-line exercises ---------- */
+.exlist { margin-top: 4px; }
+.exrow { padding: 12px 0; border-top: 1px solid var(--line); }
+.exrow:first-child { border-top: 0; }
+.exrow-name { display: flex; align-items: center; gap: 6px; font-weight: 600; font-size: 15px; letter-spacing: -0.015em; min-width: 0; }
+.exrow-name > span:first-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.exrow-ctl { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: 6px; margin-top: 8px; }
+.val {
+  appearance: none; height: 40px; padding: 0 14px; border: 0; border-radius: 10px;
+  background: var(--surface-2); color: var(--muted);
+  font-weight: 600; font-size: 16px; text-align: left; font-variant-numeric: tabular-nums;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  transition: background-color 0.15s, color 0.15s;
+}
+.exrow.logged .val { background: var(--accent-soft); color: var(--accent); }
+.bump {
+  appearance: none; height: 40px; padding: 0 14px; border: 0; border-radius: 10px;
+  background: var(--surface-2); color: var(--ink); font-weight: 600; font-size: 14px; white-space: nowrap;
+}
+.bump:active, .val:active { transform: scale(0.97); }
+.exrow-edit { display: grid; grid-template-columns: 1fr 1fr auto auto; gap: 6px 12px; align-items: center; margin-top: 6px; }
+.exrow-edit input { width: 100%; height: 36px; border: 1px solid transparent; border-radius: 9px; background: var(--surface-2); text-align: center; font-weight: 600; font-size: 16px; padding: 0 30px; }
+.exrow-edit input:focus { outline: none; border-color: var(--accent); background: var(--surface); }

@@ -2,16 +2,12 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { db, deleteRecord, getMeta, saveRecord, setMeta } from '@/lib/db';
+import { db, deleteRecord, saveRecord } from '@/lib/db';
 import { useActiveProgram, useSessions } from '@/lib/hooks';
-import {
-  fmtDate, fmtNum, fmtSet, hasData, hasSet, historyFor, parseNum, rampText, sessionId, setScore, unitLabel, ymd,
-} from '@/lib/training';
+import { fmtDate, fmtNum, hasData, hasSet, historyFor, parseNum, sessionId, setScore, ymd } from '@/lib/training';
 import type { Day, Exercise, Program, Session, SetEntry } from '@/lib/types';
 import { Icon } from './Icon';
-import { RestTimer, type TimerState } from './RestTimer';
 
-const blank = (): SetEntry => ({ w: null, r: null, done: false });
 
 function emptySession(program: Program, day: Day, date: string): Session {
   return {
@@ -35,12 +31,8 @@ export function Logger() {
   const [dayId, setDayId] = useState<string | null>(params.get('day'));
   const [cur, setCur] = useState<Session | null>(null);
   const [saved, setSaved] = useState<'idle' | 'saving' | 'saved'>('idle');
-  const [timer, setTimer] = useState<TimerState | null>(null);
-  const [restSec, setRestSec] = useState(90);
   const saveTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const pending = useRef<Session | null>(null);
-
-  useEffect(() => { void getMeta<number>('restSec').then((v) => v && setRestSec(v)); }, []);
 
   // Pick today's day from the weekly schedule unless one was chosen.
   useEffect(() => {
@@ -114,12 +106,6 @@ export function Logger() {
     if (dayId) router.replace(`/?date=${v}&day=${dayId}`, { scroll: false });
   };
 
-  const startRest = () => setTimer({ endsAt: Date.now() + restSec * 1000, total: restSec });
-  const changeTimer = (t: TimerState | null) => {
-    setTimer(t);
-    if (t) { setRestSec(t.total); void setMeta('restSec', t.total); }
-  };
-
   if (program === undefined || sessions === undefined) return <p className="empty">Loading…</p>;
   if (program === null) return <p className="empty">No program yet. Add one on the Program page.</p>;
   if (!day || !cur) return <p className="empty">Loading…</p>;
@@ -150,137 +136,81 @@ export function Logger() {
         ))}
       </div>
 
-      {day.warmup.length > 0 && <WarmupCard day={day} cur={cur} update={update} />}
-
-      <div>
+      <div className="exlist">
         {day.exercises.map((ex) => (
-          <ExerciseCard key={ex.id} ex={ex} cur={cur} sessions={sessions} update={update} onDone={startRest} />
+          <ExerciseRow key={ex.id} ex={ex} cur={cur} sessions={sessions} update={update} />
         ))}
       </div>
-
-      <div className="notes">
-        <textarea
-          aria-label="Session notes" className="field" placeholder="Notes"
-          value={cur.note} onChange={(e) => { const v = e.target.value; update((s) => ({ ...s, note: v })); }}
-        />
-      </div>
-
-      <RestTimer timer={timer} onChange={changeTimer} />
     </>
   );
 }
 
-function WarmupCard({ day, cur, update }: { day: Day; cur: Session; update: (fn: (s: Session) => Session) => void }) {
-  const done = day.warmup.filter((w) => cur.warm[w.id]).length;
-  const [open, setOpen] = useState(false);
-  return (
-    <section className="warm">
-      <button type="button" className="warm-head" aria-expanded={open} onClick={() => setOpen(!open)}>
-        Warm-up
-        <span className="muted">{done === day.warmup.length ? 'Done' : `${done}/${day.warmup.length}`}<Icon name={open ? 'up' : 'down'} size={16} /></span>
-      </button>
-      {open && day.warmup.map((w) => {
-        const on = !!cur.warm[w.id];
-        return (
-          <button
-            key={w.id} type="button" className={`wurow${on ? ' done' : ''}`} aria-pressed={on}
-            onClick={() => update((s) => ({ ...s, warm: { ...s.warm, [w.id]: !on } }))}
-          >
-            <span className="wudot" aria-hidden />
-            <span className="wutext"><strong>{w.title}</strong>{w.detail && <span className="sub">{w.detail}</span>}</span>
-          </button>
-        );
-      })}
-    </section>
-  );
+type Lift = { w: number | null; r: number | null };
+
+/** The heaviest (then most reps) set of a list, as the exercise's working numbers. */
+function topOf(unit: Exercise['unit'], sets: SetEntry[] | undefined): Lift | null {
+  const real = (sets ?? []).filter(hasSet);
+  if (!real.length) return null;
+  const best = real.reduce((a, b) => (setScore(unit, b) > setScore(unit, a) ? b : a));
+  return { w: best.w, r: best.r };
 }
 
-function ExerciseCard({ ex, cur, sessions, update, onDone }: {
-  ex: Exercise; cur: Session; sessions: Session[];
-  update: (fn: (s: Session) => Session) => void; onDone: () => void;
+const STEP: Record<string, number> = { kg: 2.5, '+kg': 2.5, cm: 1 };
+
+function ExerciseRow({ ex, cur, sessions, update }: {
+  ex: Exercise; cur: Session; sessions: Session[]; update: (fn: (s: Session) => Session) => void;
 }) {
-  const [showHint, setShowHint] = useState(false);
+  const [editing, setEditing] = useState(false);
   const hist = useMemo(() => historyFor(sessions, ex.id, cur.id), [sessions, ex.id, cur.id]);
-  const last = hist[0];
-  const sets = cur.sets[ex.id] ?? Array.from({ length: ex.sets }, blank);
   const unit = ex.unit;
+  const now = topOf(unit, cur.sets[ex.id]);
+  const prev = hist[0] ? topOf(unit, hist[0].sets[ex.id]) : null;
+  const base = now ?? prev;
+  const logged = !!now;
 
-  const best = sets.filter(hasSet).reduce((m, s) => Math.max(m, setScore(unit, s)), -1);
   const prevBest = hist.reduce((m, h) => Math.max(m, ...h.sets[ex.id].filter(hasSet).map((s) => setScore(unit, s))), -1);
-  const isPr = hist.length > 0 && best > prevBest;
-  const ramp = rampText(ex, last);
+  const isPr = logged && hist.length > 0 && setScore(unit, { w: now.w, r: now.r, done: true }) > prevBest;
 
-  const setAt = (i: number, patch: Partial<SetEntry>) =>
-    update((s) => {
-      const arr = [...(s.sets[ex.id] ?? Array.from({ length: ex.sets }, blank))];
-      arr[i] = { ...arr[i], ...patch };
-      return { ...s, sets: { ...s.sets, [ex.id]: arr } };
-    });
-  const setAll = (arr: SetEntry[]) => update((s) => ({ ...s, sets: { ...s.sets, [ex.id]: arr } }));
+  // Every set of the exercise gets the same numbers; the program says how many.
+  const log = (v: Lift | null) => update((s) => {
+    const sets = { ...s.sets };
+    if (v) sets[ex.id] = Array.from({ length: ex.sets }, () => ({ w: unit ? v.w : null, r: v.r, done: true }));
+    else delete sets[ex.id];
+    return { ...s, sets };
+  });
 
-  const toggleDone = (i: number) => {
-    const s = sets[i];
-    const done = !s.done;
-    const lastSet = last?.sets[ex.id]?.[i];
-    // Ticking an empty set accepts last time's numbers for it.
-    const patch: Partial<SetEntry> = { done };
-    if (done && !hasSet(s) && lastSet) { patch.w = lastSet.w; patch.r = lastSet.r; }
-    setAt(i, patch);
-    if (done) onDone();
-  };
+  const plusRep = () => log({ w: base?.w ?? (unit ? 0 : null), r: (base?.r ?? 0) + 1 });
+  const plusWeight = () => log({ w: (base?.w ?? 0) + (STEP[unit ?? ''] ?? 2.5), r: base?.r ?? null });
+  const tapValue = () => (!logged && base ? log(base) : setEditing(!editing));
 
-  const lastLine = last ? last.sets[ex.id].filter(hasSet).map((s) => fmtSet(unit, s)).join('  ') : '';
+  const unitText = unit === '+kg' ? '+kg' : unit ?? '';
+  const valueText = base
+    ? `${unit ? `${fmtNum(base.w ?? 0)} ${unitText} × ` : ''}${base.r ?? '–'}${unit ? '' : ' reps'}`
+    : 'Set';
 
   return (
-    <section className="ex" id={`ex-${ex.id}`}>
-      <div className="ex-head">
-        <button type="button" className="ex-title" onClick={() => setShowHint(!showHint)} aria-expanded={showHint}>{ex.name}</button>
+    <section className={`exrow${logged ? ' logged' : ''}`} id={`ex-${ex.id}`}>
+      <div className="exrow-name">
+        <span>{ex.name}</span>
         {isPr && <span className="pr">PR</span>}
-        <span className="scheme">{ex.scheme.split(' · ')[0]}</span>
-        <button type="button" className="mini" aria-label="Remove set" disabled={sets.length < 2} onClick={() => setAll(sets.slice(0, -1))}>−</button>
-        <button type="button" className="mini" aria-label="Add set" onClick={() => setAll([...sets, blank()])}>+</button>
       </div>
-      {(last || showHint) && (
-        <p className="last">
-          {last ? `Last ${lastLine}` : ''}
-          {last && !hasData(sets) && (
-            <button type="button" className="inline-link" onClick={() => setAll(last.sets[ex.id].map((x) => ({ w: x.w, r: x.r, done: false })))}>Copy</button>
+      <div className="exrow-ctl">
+        <button type="button" className="val" onClick={tapValue} aria-label={logged ? `Edit ${valueText}` : base ? `Log ${valueText}, same as last time` : 'Enter numbers'}>
+          {valueText}
+        </button>
+        <button type="button" className="bump" onClick={plusRep}>+ rep</button>
+        {unit && <button type="button" className="bump" onClick={plusWeight}>+ {unitText === 'cm' ? 'cm' : 'weight'}</button>}
+      </div>
+      {editing && (
+        <div className="exrow-edit">
+          {unit && (
+            <label className="inp"><input inputMode="decimal" aria-label={unitText} defaultValue={base?.w ?? ''} onChange={(e) => log({ w: parseNum(e.target.value), r: base?.r ?? null })} /><span className="sfx">{unitText}</span></label>
           )}
-        </p>
+          <label className="inp"><input inputMode="numeric" aria-label="Reps" defaultValue={base?.r ?? ''} onChange={(e) => { const n = parseNum(e.target.value); log({ w: base?.w ?? null, r: n == null ? null : Math.round(n) }); }} /><span className="sfx">reps</span></label>
+          <button type="button" className="linkbtn quiet" onClick={() => { log(null); setEditing(false); }}>Clear</button>
+          <button type="button" className="linkbtn" onClick={() => setEditing(false)}>Done</button>
+        </div>
       )}
-      {showHint && ex.hint && <p className="hint">{ex.hint}</p>}
-      {showHint && ramp && <p className="ramp">{ramp}</p>}
-
-      <div className="sets">
-        {sets.map((s, i) => {
-          const l = last?.sets[ex.id]?.[i];
-          return (
-            <div key={i} className={`setrow${unit ? '' : ' nounit'}${s.done ? ' done' : ''}`}>
-              <button type="button" className="setno" aria-pressed={s.done} aria-label={`Set ${i + 1}, ${s.done ? 'completed' : 'tap when finished'}`} onClick={() => toggleDone(i)}>
-                {i + 1}
-              </button>
-              {unit && (
-                <label className="inp">
-                  <input
-                    inputMode="decimal" autoComplete="off" aria-label={`${ex.name}, set ${i + 1}, ${unitLabel(unit)}`}
-                    placeholder={l?.w != null ? fmtNum(l.w) : '–'} value={s.w == null ? '' : String(s.w)}
-                    onChange={(e) => setAt(i, { w: parseNum(e.target.value) })}
-                  />
-                  <span className="sfx">{unitLabel(unit)}</span>
-                </label>
-              )}
-              <label className="inp">
-                <input
-                  inputMode="numeric" autoComplete="off" aria-label={`${ex.name}, set ${i + 1}, reps`}
-                  placeholder={l?.r != null ? String(l.r) : '–'} value={s.r == null ? '' : String(s.r)}
-                  onChange={(e) => { const n = parseNum(e.target.value); setAt(i, { r: n == null ? null : Math.round(n) }); }}
-                />
-                <span className="sfx">reps</span>
-              </label>
-            </div>
-          );
-        })}
-      </div>
     </section>
   );
 }
