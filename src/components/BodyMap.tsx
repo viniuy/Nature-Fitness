@@ -9,103 +9,88 @@ interface Props {
   onSelect: (m: Muscle) => void;
 }
 
-const NEUTRAL = 'var(--surface-2)';
-const EMPTY = 'color-mix(in srgb, var(--muted) 30%, var(--surface-2))';
+// Line-art anatomy figure, front and back. Only the left half of each shape is
+// drawn; the right half is the same path mirrored across x = 100.
+const MIRROR = 'translate(200 0) scale(-1 1)';
 
+const OUTLINE =
+  'M100 47 L93 47 L91 58 Q80 62 70 65 Q57 69 53 82 Q49 96 49 112 Q47 128 45 142 Q40 160 37 178 Q35 190 34 198 ' +
+  'Q29 208 28 220 Q30 228 35 226 Q37 216 40 212 Q42 206 43 200 Q49 180 53 164 Q57 152 59 144 Q62 130 63 118 ' +
+  'Q65 108 67 102 Q70 116 72 132 Q75 150 75 162 Q73 176 72 188 Q69 210 70 236 Q72 262 75 288 Q73 300 73 316 ' +
+  'Q75 340 80 362 Q81 370 79 378 Q76 386 84 387 Q93 388 96 384 Q96 374 95 366 Q97 340 96 316 Q95 300 95 292 ' +
+  'Q97 266 98 236 Q99 214 100 204';
 
-/** Front and back silhouettes; each muscle is filled with its rank's wood colour. */
+type Shape = string;
+const FRONT: { m: Muscle; d: Shape[] }[] = [
+  { m: 'traps', d: ['M91 60 Q82 63 74 66 Q80 69 86 67 Q90 65 92 62 Z'] },
+  { m: 'sideDelts', d: ['M66 68 Q58 71 55 83 Q53 94 53.5 103 L57.5 103 Q57 90 60.5 80 Q63 73 68 69 Z'] },
+  { m: 'frontDelts', d: ['M74 66 Q64 69 60 80 Q57 91 58 103 Q63 98 66 88 Q70 76 78 69 Z'] },
+  { m: 'chest', d: ['M99 66 L80 67 Q70 72 67 90 Q71 104 86 107 Q96 107 99 100 Z'] },
+  { m: 'biceps', d: ['M58 106 Q52 114 52 128 Q53 138 56 142 Q61 132 62 118 Q62 110 58 106 Z'] },
+  { m: 'forearms', d: ['M55 147 Q47 160 42 178 Q40 188 39 196 L43 198 Q48 182 52 168 Q56 156 58 148 Z'] },
+  { m: 'abs', d: [
+    'M89 110 L98 110 L98 123 L89 124 Q87 116 89 110 Z',
+    'M89 127 L98 126 L98 140 L89 141 Q88 134 89 127 Z',
+    'M89 144 L98 143 L98 157 L90 158 Q88 151 89 144 Z',
+    'M90 161 L98 160 L98 184 Q93 184 91 178 Q89 170 90 161 Z',
+  ] },
+  { m: 'obliques', d: ['M86 110 Q76 114 73 130 Q75 150 76 166 Q80 178 87 182 Q88 168 87 154 Q86 132 86 110 Z'] },
+  { m: 'quads', d: ['M77 194 Q71 216 73 246 Q75 270 82 286 Q88 290 92 284 Q95 262 94 238 Q92 212 86 198 Z'] },
+  { m: 'adductors', d: ['M89 200 Q95 204 98 212 Q97 232 95 248 Q92 234 91 220 Q90 208 89 200 Z'] },
+  { m: 'calves', d: ['M76 302 Q73 320 77 342 Q80 352 83 354 Q84 332 83 316 Q82 306 79 300 Z', 'M93 302 Q96 320 94 344 L90 348 Q88 330 89 314 Q90 306 93 302 Z'] },
+];
+
+const BACK: { m: Muscle; d: Shape[] }[] = [
+  { m: 'traps', d: ['M100 50 L93 52 Q86 60 74 65 Q86 70 92 86 Q96 102 100 118 Z'] },
+  { m: 'rearDelts', d: ['M72 67 Q60 70 55.5 83 Q53 94 53.5 103 L58 103 Q60 88 67 78 Q72 72 78 70 Z'] },
+  { m: 'upperBack', d: ['M79 71 Q88 78 90 92 Q86 100 76 102 Q69 100 66 96 Q68 82 79 71 Z'] },
+  { m: 'lats', d: ['M68 102 Q80 106 91 106 Q92 122 91 140 Q88 156 82 172 Q76 168 75 160 Q74 130 68 102 Z'] },
+  { m: 'lowerBack', d: ['M94 122 L99 120 L99 184 L90 184 Q89 172 90.5 158 Q93 140 94 122 Z'] },
+  { m: 'triceps', d: ['M58 106 Q51 114 51 128 Q52 140 56 144 Q62 132 63 118 Q62 110 58 106 Z'] },
+  { m: 'forearms', d: ['M55 147 Q47 160 42 178 Q40 188 39 196 L43 198 Q48 182 52 168 Q56 156 58 148 Z'] },
+  { m: 'glutes', d: ['M76 188 Q71 200 74 212 Q84 222 99 216 L99 192 Q88 186 76 188 Z'] },
+  { m: 'hamstrings', d: ['M73 220 Q71 248 76 276 Q80 288 86 290 Q93 270 95 246 Q96 230 96 222 Q85 226 73 220 Z'] },
+  { m: 'calves', d: ['M77 296 Q71 314 75 334 Q80 346 87 344 Q94 328 95 310 Q94 298 89 293 Q82 291 77 296 Z'] },
+];
+
+/** Front and back line-art figures; each muscle fills with its rank colour. */
 export function BodyMap({ scores, selected, onSelect }: Props) {
   const by = new Map(scores.map((s) => [s.muscle, s]));
 
-  const M = ({ m, children }: { m: Muscle; children: ReactNode }) => {
+  const M = ({ m, d }: { m: Muscle; d: Shape[] }) => {
     const s = by.get(m);
     const on = selected === m;
     return (
       <g
         role="button" tabIndex={0} aria-label={`${MUSCLE_NAMES[m]}: ${s ? `${s.rank.name}, top ${Math.max(1, Math.round(100 - s.percentile))}%` : 'not ranked yet'}`}
         onClick={() => onSelect(m)} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onSelect(m); } }}
-        style={{ cursor: 'pointer', outline: 'none' }}
-        fill={s ? s.rank.color : EMPTY}
-        stroke={on ? 'var(--ink)' : 'var(--bg)'}
-        strokeWidth={on ? 2 : 1.5}
-        opacity={selected && !on ? 0.55 : 1}
+        className={`bm-m${on ? ' on' : ''}${s ? ' ranked' : ''}`}
+        style={s ? { fill: s.rank.color } : undefined}
+        opacity={selected && !on ? 0.45 : 1}
       >
-        {children}
+        {d.map((p, k) => <path key={k} d={p} />)}
+        {d.map((p, k) => <path key={`m${k}`} d={p} transform={MIRROR} />)}
       </g>
     );
   };
-  const neutral = { fill: NEUTRAL, stroke: 'var(--bg)', strokeWidth: 1.5 };
 
-  const Head = () => (
-    <>
-      <ellipse cx="100" cy="30" rx="17" ry="21" {...neutral} />
-      <rect x="92" y="48" width="16" height="14" rx="4" {...neutral} />
-    </>
-  );
-  const Limbs = () => (
-    <>
-      <path d="M76 186 L124 186 L128 208 L72 208 Z" {...neutral} />
-      <circle cx="41" cy="204" r="8" {...neutral} />
-      <circle cx="159" cy="204" r="8" {...neutral} />
-      <ellipse cx="86" cy="298" rx="10" ry="8" {...neutral} />
-      <ellipse cx="114" cy="298" rx="10" ry="8" {...neutral} />
-      <path d="M78 362 L94 362 L96 376 L74 376 Z" {...neutral} />
-      <path d="M106 362 L122 362 L126 376 L104 376 Z" {...neutral} />
-    </>
+  const Figure = ({ x, muscles, label }: { x: number; muscles: typeof FRONT; label: string }): ReactNode => (
+    <g transform={`translate(${x} 0)`}>
+      <path className="bm-skin" d={OUTLINE + ' L100 47 Z'} />
+      <path className="bm-skin" d={OUTLINE + ' L100 47 Z'} transform={MIRROR} />
+      <ellipse className="bm-skin" cx="100" cy="27" rx="15" ry="20" />
+      {muscles.map((g) => <M key={g.m} m={g.m} d={g.d} />)}
+      <path className="bm-line" d={OUTLINE} />
+      <path className="bm-line" d={OUTLINE} transform={MIRROR} />
+      <ellipse className="bm-line" cx="100" cy="27" rx="15" ry="20" />
+      <text x="100" y="402" textAnchor="middle" className="bm-label">{label}</text>
+    </g>
   );
 
   return (
-    <svg viewBox="0 0 420 390" className="bodymap" role="group" aria-label="Muscle ranks, front and back">
-
-      {/* Front */}
-      <g>
-        <Head />
-        <M m="traps"><path d="M88 58 L112 58 L130 72 L70 72 Z" /></M>
-        <M m="sideDelts"><ellipse cx="57" cy="86" rx="10" ry="15" /><ellipse cx="143" cy="86" rx="10" ry="15" /></M>
-        <M m="frontDelts"><ellipse cx="69" cy="85" rx="10" ry="14" /><ellipse cx="131" cy="85" rx="10" ry="14" /></M>
-        <M m="chest">
-          <path d="M99 74 L78 74 Q68 88 73 106 Q86 115 99 109 Z" />
-          <path d="M101 74 L122 74 Q132 88 127 106 Q114 115 101 109 Z" />
-        </M>
-        <M m="biceps"><ellipse cx="53" cy="123" rx="10" ry="20" /><ellipse cx="147" cy="123" rx="10" ry="20" /></M>
-        <M m="forearms">
-          <ellipse cx="46" cy="168" rx="9" ry="24" transform="rotate(6 46 168)" />
-          <ellipse cx="154" cy="168" rx="9" ry="24" transform="rotate(-6 154 168)" />
-        </M>
-        <M m="abs"><rect x="87" y="113" width="26" height="72" rx="8" /></M>
-        <M m="obliques">
-          <path d="M85 113 Q74 140 78 184 L85 184 Z" />
-          <path d="M115 113 Q126 140 122 184 L115 184 Z" />
-        </M>
-        <Limbs />
-        <M m="quads"><ellipse cx="86" cy="248" rx="15" ry="44" /><ellipse cx="114" cy="248" rx="15" ry="44" /></M>
-        <M m="adductors"><ellipse cx="96.5" cy="224" rx="4.5" ry="20" /><ellipse cx="103.5" cy="224" rx="4.5" ry="20" /></M>
-        <M m="calves"><ellipse cx="86" cy="332" rx="9.5" ry="30" /><ellipse cx="114" cy="332" rx="9.5" ry="30" /></M>
-        <text x="100" y="388" textAnchor="middle" className="bm-label">FRONT</text>
-      </g>
-
-      {/* Back */}
-      <g transform="translate(220 0)">
-        <Head />
-        <M m="upperBack"><path d="M84 78 L116 78 L113 122 L87 122 Z" /></M>
-        <M m="traps"><path d="M100 56 L127 73 L100 118 L73 73 Z" /></M>
-        <M m="rearDelts"><ellipse cx="60" cy="87" rx="13" ry="15" /><ellipse cx="140" cy="87" rx="13" ry="15" /></M>
-        <M m="lats">
-          <path d="M77 96 Q70 132 89 162 L95 150 L92 104 Z" />
-          <path d="M123 96 Q130 132 111 162 L105 150 L108 104 Z" />
-        </M>
-        <M m="lowerBack"><rect x="89" y="148" width="22" height="36" rx="6" /></M>
-        <M m="triceps"><ellipse cx="53" cy="122" rx="10" ry="20" /><ellipse cx="147" cy="122" rx="10" ry="20" /></M>
-        <M m="forearms">
-          <ellipse cx="46" cy="168" rx="9" ry="24" transform="rotate(6 46 168)" />
-          <ellipse cx="154" cy="168" rx="9" ry="24" transform="rotate(-6 154 168)" />
-        </M>
-        <Limbs />
-        <M m="glutes"><ellipse cx="88" cy="206" rx="14" ry="16" /><ellipse cx="112" cy="206" rx="14" ry="16" /></M>
-        <M m="hamstrings"><ellipse cx="87" cy="258" rx="14" ry="36" /><ellipse cx="113" cy="258" rx="14" ry="36" /></M>
-        <M m="calves"><ellipse cx="87" cy="330" rx="11.5" ry="30" /><ellipse cx="113" cy="330" rx="11.5" ry="30" /></M>
-        <text x="100" y="388" textAnchor="middle" className="bm-label">BACK</text>
-      </g>
+    <svg viewBox="0 0 420 408" className="bodymap" role="group" aria-label="Muscle ranks, front and back">
+      <Figure x={0} muscles={FRONT} label="FRONT" />
+      <Figure x={220} muscles={BACK} label="BACK" />
     </svg>
   );
 }
