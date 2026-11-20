@@ -680,3 +680,9 @@ button, [role='button'], .chip, .tabbar a, .sidebar a { user-select: none; -webk
 .bodymap .bm-m.on { stroke: var(--ink); stroke-width: 1.8; }
 .bodymap .bm-m:focus-visible { filter: drop-shadow(0 0 3px var(--accent)); }
 .bodymap .bm-detail { fill: none; stroke: color-mix(in srgb, var(--ink) 35%, transparent); stroke-width: 0.8; stroke-linecap: round; pointer-events: none; }
+/* filled regions: painter's order, clipped to the outline */
+.bodymap .bm-m { fill: var(--surface); }
+.bodymap .bm-m.ranked { fill-opacity: 1; }
+.bodymap .bm-skin2 { fill: var(--surface); stroke: color-mix(in srgb, var(--ink) 55%, transparent); stroke-width: 1; stroke-linejoin: round; pointer-events: none; }
+.bodymap .bm-sel { fill: none; stroke: var(--ink); stroke-width: 2.4; stroke-linejoin: round; pointer-events: none; }
+.bodymap .bm-head { fill: var(--surface); stroke: color-mix(in srgb, var(--ink) 70%, transparent); stroke-width: 1.3; }

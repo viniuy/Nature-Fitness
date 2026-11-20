@@ -1,6 +1,5 @@
 'use client';
 
-import type { ReactNode } from 'react';
 import { MUSCLE_NAMES, type Muscle, type MuscleScore } from '@/lib/ranks';
 
 interface Props {
@@ -9,8 +8,10 @@ interface Props {
   onSelect: (m: Muscle) => void;
 }
 
-// Line-art anatomy figure, front and back. Only the left half of each shape is
-// drawn; the right half is the same path mirrored across x = 100.
+// Line-art anatomy figure, front and back. Only the left half is drawn; the
+// right half is the same path mirrored across x = 100. Muscle regions are
+// painted in order (later ones cover earlier ones) and clipped to the body
+// outline, so together they fill the whole silhouette with no gaps.
 const MIRROR = 'translate(200 0) scale(-1 1)';
 
 const OUTLINE =
@@ -19,89 +20,116 @@ const OUTLINE =
   'Q48 182 51 166 Q55 154 55 148 Q59 136 59 122 Q59 110 62 102 Q65 110 66 120 Q70 142 75 160 Q74 176 73 186 ' +
   'Q64 204 64 226 Q66 254 73 278 Q75 284 73 290 Q67 304 68.5 320 Q71 342 78 360 Q80 370 78 378 Q75 386 84 387 ' +
   'Q93 388 96 384 Q96 374 95 366 Q97 344 98.5 324 Q99 306 95 294 Q97 282 97 270 Q99 240 99 220 Q100 208 100 204';
+const HEAD = { cx: 100, cy: 23, rx: 15.5, ry: 20 };
 
-// A rounded ab block from y0 to y1, inner edge at the centre line.
-const ab = (y0: number, y1: number, xl: number) =>
-  `M${xl} ${y0 + 3} Q${xl} ${y0} ${xl + 3} ${y0} L97 ${y0} Q98.6 ${y0} 98.6 ${y0 + 2} L98.6 ${y1 - 2} Q98.6 ${y1} 96.6 ${y1} L${xl + 3} ${y1} Q${xl - 0.5} ${y1} ${xl} ${y1 - 3} Z`;
+type Layer = { m?: Muscle; d: string };
 
-type Shape = string;
-const FRONT: { m: Muscle; d: Shape[] }[] = [
-  { m: 'traps', d: ['M91.5 51 Q84 56 76 59 Q85 62 91.5 59 Z'] },
-  { m: 'sideDelts', d: ['M61 62 Q49 65 46.5 80 Q45 92 47.5 103 L52 102 Q52 88 55 78 Q58 68 65 63.5 Z'] },
-  { m: 'frontDelts', d: ['M76 61 Q66 63 60 74 Q56 86 55 101 Q62 98 65 88 Q68 74 80 64 Z'] },
-  { m: 'chest', d: ['M99 62 L82 63 Q72 66 68.5 80 Q66 94 72 102 Q84 110 99 104 Z'] },
-  { m: 'biceps', d: ['M57 106 Q47 112 43.5 126 Q44 138 48 144 Q55 138 57 124 Q58 112 57 106 Z'] },
-  { m: 'forearms', d: ['M52 150 Q41 156 37 168 Q35.5 184 36 194 L41 196 Q46 180 49.5 168 Q53 158 53 150 Z'] },
-  { m: 'abs', d: [ab(108, 120.5, 88.5), ab(123, 135.5, 88.5), ab(138, 150.5, 89), 'M89.5 153 L98.6 153 L98.6 180 Q93 180 91 172 Q89 163 89.5 153 Z'] },
-  { m: 'obliques', d: ['M86 108 Q77 110 68.5 118 Q71 134 74 150 Q78 168 87 178 Q86 160 86 140 Z'] },
-  { m: 'quads', d: ['M76 192 Q66 208 66.5 230 Q68 256 77 276 Q86 282 92 278 Q96 258 96 236 Q94 212 87 196 Z'] },
-  { m: 'adductors', d: ['M89 198 Q96 202 99 212 Q98 232 96 250 Q92 232 91 218 Q90 206 89 198 Z'] },
-  { m: 'calves', d: ['M74 294 Q68 310 70 328 Q74 344 80 350 Q82 330 81 314 Q80 302 77 296 Z', 'M94 298 Q99 312 97.5 330 Q95 342 92 348 Q89 330 90 314 Q91 304 94 298 Z'] },
+// Shared arm and lower-body pieces (front and back use the same silhouette).
+const HAND = 'M0 176 L60 176 L60 240 L0 240 Z';
+const FOREARM = 'M5 128 L60 128 Q53 158 50 170 Q46 184 42.5 198 Q38 201 33 196 L5 196 Z';
+const UPPER_ARM = 'M10 96 L64 96 Q59 110 59 122 Q58.5 136 55 148 Q48 151 41 145 L10 145 Z';
+const DELT = 'M76 48 L20 48 L20 108 L41 110 Q46 116 50 119 Q56 111 62 101 Q64 86 69 74 Q72 64 77 57 Z';
+const SIDE_DELT = 'M64 58 Q53 66 49.5 80 Q47.5 96 49 118 Q45 114 41 110 L10 108 L10 48 Z';
+const KNEE = 'M57 276 Q66 280 76 279 Q87 286 100 277 L100 296 Q86 300 75 294 Q64 296 57 294 Z';
+const FOOT = 'M57 358 Q68 364 78 362 Q88 368 100 362 L100 400 L57 400 Z';
+
+const FRONT: Layer[] = [
+  { m: 'obliques', d: 'M50 96 L100 96 L100 216 L57 216 L57 200 L50 200 Z' },
+  { m: 'abs', d: 'M87.5 104 L100 104 L100 204 Q93 202 90 192 Q87 170 87.5 140 Z' },
+  { m: 'chest', d: 'M100 56 L50 56 L50 92 Q64 104 80 107 Q93 108 100 104 Z' },
+  { m: 'traps', d: 'M100 30 L50 30 L50 62 Q70 62 80 60 Q88 58 100 57 Z' },
+  { d: 'M92 30 L100 30 L100 52 L91 52 Z' }, // neck
+  { d: HAND },
+  { m: 'forearms', d: FOREARM },
+  { m: 'biceps', d: UPPER_ARM },
+  { m: 'frontDelts', d: DELT },
+  { m: 'sideDelts', d: SIDE_DELT },
+  { m: 'quads', d: 'M57 182 L73 184 Q86 196 96 210 L100 214 L100 290 L57 290 Z' },
+  { m: 'adductors', d: 'M89 197 Q97 203 100 208 L100 262 Q95 246 93 230 Q91 210 89 197 Z' },
+  { d: KNEE },
+  { m: 'calves', d: 'M57 292 Q64 296 75 292 Q86 298 100 294 L100 370 L57 370 Z' },
+  { d: FOOT },
 ];
 const FRONT_LINES = [
   'M92.5 53 Q84 58 76 61', // collarbone
-  'M80 206 Q83 240 87 272', // quad split
-  'M75 280 Q82 292 92 284', // knee
-  'M78 120 L74 126 M79 132 L75 138 M80 144 L76 150', // serratus
+  'M88 121 Q94 123 100 121 M88 137 Q94 139 100 137 M88.5 153 Q94 155 100 153', // ab rows
+  'M66 118 L71 122 M68 128 L73 132 M70 138 L74.5 142', // serratus
+  'M47 136 Q51 142 57 144', // elbow crease
+  'M44 158 Q47 172 46 188', // forearm split
+  'M80 204 Q82 240 86 274', // quad split
+  'M88 236 Q91 258 92 278', // inner quad
+  'M86 304 Q88 330 86 356', // shin
 ];
 
-const BACK: { m: Muscle; d: Shape[] }[] = [
-  { m: 'traps', d: ['M100 44 L93 46 Q88 54 76 58 Q68 61 66 63 Q84 68 91 84 Q96 100 100 116 Z'] },
-  { m: 'rearDelts', d: ['M64 62 Q50 65 46.5 80 Q45 92 47.5 103 L54 102 Q56 88 62 78 Q68 70 76 66 Z'] },
-  { m: 'upperBack', d: ['M77 68 Q87 74 90 88 Q86 98 76 100 Q68 99 64 94 Q66 80 77 68 Z'] },
-  { m: 'lats', d: ['M64.5 100 Q76 104 90 104 Q92 120 91 138 Q87 156 81 170 Q77 164 76 154 Q71 126 64.5 100 Z'] },
-  { m: 'lowerBack', d: ['M94 122 L99 120 L99 182 L90 182 Q89 170 90.5 156 Q93 138 94 122 Z'] },
-  { m: 'triceps', d: ['M57 106 Q46 112 43 126 Q43.5 140 48 146 Q56 136 57.5 122 Q58 112 57 106 Z'] },
-  { m: 'forearms', d: ['M52 150 Q41 156 37 168 Q35.5 184 36 194 L41 196 Q46 180 49.5 168 Q53 158 53 150 Z'] },
-  { m: 'glutes', d: ['M75 186 Q69 200 72 214 Q84 224 99 218 L99 190 Q88 184 75 186 Z'] },
-  { m: 'hamstrings', d: ['M70 222 Q66.5 248 74 274 Q81 286 87 286 Q94 266 96 244 Q97 230 97 224 Q85 228 70 222 Z'] },
-  { m: 'calves', d: ['M75 294 Q67 310 70.5 328 Q76 342 85 342 Q86 320 85 300 Z', 'M88 296 Q98 304 98 322 Q96 338 87 342 Q88 320 88 300 Z'] },
+const BACK: Layer[] = [
+  { m: 'lats', d: 'M50 56 L100 56 L100 200 L57 200 L57 190 L50 190 Z' },
+  { m: 'lowerBack', d: 'M91 118 L100 116 L100 200 L84 200 Q85 170 88 140 Z' },
+  { m: 'upperBack', d: 'M58 70 Q76 70 88 84 Q91 96 86 104 Q74 108 60 104 Z' },
+  { m: 'traps', d: 'M100 30 L50 30 L50 60 Q78 63 89 82 Q96 100 100 118 Z' },
+  { d: HAND },
+  { m: 'forearms', d: FOREARM },
+  { m: 'triceps', d: UPPER_ARM },
+  { m: 'rearDelts', d: DELT },
+  { m: 'rearDelts', d: SIDE_DELT },
+  { m: 'hamstrings', d: 'M57 214 L100 214 L100 292 L57 292 Z' },
+  { m: 'glutes', d: 'M57 182 Q72 182 100 190 L100 226 Q86 232 72 226 Q64 223 57 222 Z' },
+  { d: 'M57 284 Q66 288 76 287 Q87 291 100 285 L100 293 Q86 297 76 294 Q66 295 57 293 Z' }, // back of knee
+  { m: 'calves', d: 'M57 290 Q66 294 76 291 Q86 296 100 292 L100 370 L57 370 Z' },
+  { d: 'M57 342 Q70 352 84 352 Q93 352 100 344 L100 400 L57 400 Z' }, // achilles and foot
 ];
 const BACK_LINES = [
-  'M52 124 Q53 132 56 136', // triceps horseshoe
-  'M84 232 Q85 256 86 282', // hamstring split
-  'M78 344 Q84 356 92 344', // achilles
+  'M47 118 Q52 130 57 134', // triceps horseshoe
+  'M44 158 Q47 172 46 188', // forearm split
+  'M84 232 Q85 258 86 282', // hamstring split
+  'M84 300 Q86 322 85 346', // calf heads
+  'M100 118 L100 200', // spine
 ];
 
 /** Front and back line-art figures; each muscle fills with its rank colour. */
 export function BodyMap({ scores, selected, onSelect }: Props) {
   const by = new Map(scores.map((s) => [s.muscle, s]));
 
-  const M = ({ m, d }: { m: Muscle; d: Shape[] }) => {
+  const Region = ({ layer }: { layer: Layer }) => {
+    const { m, d } = layer;
+    if (!m) return <g className="bm-skin2"><path d={d} /><path d={d} transform={MIRROR} /></g>;
     const s = by.get(m);
-    const on = selected === m;
     return (
       <g
         role="button" tabIndex={0} aria-label={`${MUSCLE_NAMES[m]}: ${s ? `${s.rank.name}, top ${Math.max(1, Math.round(100 - s.percentile))}%` : 'not ranked yet'}`}
         onClick={() => onSelect(m)} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onSelect(m); } }}
-        className={`bm-m${on ? ' on' : ''}${s ? ' ranked' : ''}`}
-        style={s ? { fill: s.rank.color } : undefined}
-        opacity={selected && !on ? 0.45 : 1}
+        className={`bm-m${s ? ' ranked' : ''}`}
+        style={s ? { fill: `color-mix(in srgb, ${s.rank.color} 88%, var(--surface))` } : undefined}
       >
-        {d.map((p, k) => <path key={k} d={p} />)}
-        {d.map((p, k) => <path key={`m${k}`} d={p} transform={MIRROR} />)}
+        <path d={d} /><path d={d} transform={MIRROR} />
       </g>
     );
   };
 
-  const Figure = ({ x, muscles, lines, label }: { x: number; muscles: typeof FRONT; lines: string[]; label: string }): ReactNode => (
-    <g transform={`translate(${x} 0)`}>
-      <path className="bm-skin" d={OUTLINE + ' L100 42 Z'} />
-      <path className="bm-skin" d={OUTLINE + ' L100 42 Z'} transform={MIRROR} />
-      <ellipse className="bm-skin" cx="100" cy="25" rx="13" ry="17" />
-      {muscles.map((g) => <M key={g.m} m={g.m} d={g.d} />)}
-      {lines.map((l, k) => <g key={k} className="bm-detail"><path d={l} /><path d={l} transform={MIRROR} /></g>)}
-      <path className="bm-line" d={OUTLINE} />
-      <path className="bm-line" d={OUTLINE} transform={MIRROR} />
-      <ellipse className="bm-line" cx="100" cy="25" rx="13" ry="17" />
-      <text x="100" y="402" textAnchor="middle" className="bm-label">{label}</text>
-    </g>
-  );
+  const Figure = ({ x, id, layers, lines, label }: { x: number; id: string; layers: Layer[]; lines: string[]; label: string }) => {
+    const sel = layers.filter((l) => l.m && l.m === selected);
+    return (
+      <g transform={`translate(${x} 0)`}>
+        <clipPath id={id}>
+          <path d={OUTLINE + ' L100 42 Z'} />
+          <path d={OUTLINE + ' L100 42 Z'} transform={MIRROR} />
+        </clipPath>
+        <g clipPath={`url(#${id})`}>
+          {layers.map((l, k) => <Region key={k} layer={l} />)}
+          {lines.map((l, k) => <g key={k} className="bm-detail"><path d={l} /><path d={l} transform={MIRROR} /></g>)}
+          {sel.map((l, k) => <g key={k} className="bm-sel"><path d={l.d} /><path d={l.d} transform={MIRROR} /></g>)}
+        </g>
+        <path className="bm-line" d={OUTLINE} />
+        <path className="bm-line" d={OUTLINE} transform={MIRROR} />
+        <ellipse className="bm-head" {...HEAD} />
+        <text x="100" y="402" textAnchor="middle" className="bm-label">{label}</text>
+      </g>
+    );
+  };
 
   return (
     <svg viewBox="0 0 420 408" className="bodymap" role="group" aria-label="Muscle ranks, front and back">
-      <Figure x={0} muscles={FRONT} lines={FRONT_LINES} label="FRONT" />
-      <Figure x={220} muscles={BACK} lines={BACK_LINES} label="BACK" />
+      <Figure x={0} id="bm-front" layers={FRONT} lines={FRONT_LINES} label="FRONT" />
+      <Figure x={220} id="bm-back" layers={BACK} lines={BACK_LINES} label="BACK" />
     </svg>
   );
 }
