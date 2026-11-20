@@ -14,43 +14,53 @@ interface Props {
 const MIRROR = 'translate(200 0) scale(-1 1)';
 
 const OUTLINE =
-  'M100 47 L93 47 L91 58 Q80 62 70 65 Q57 69 53 82 Q49 96 49 112 Q47 128 45 142 Q40 160 37 178 Q35 190 34 198 ' +
-  'Q29 208 28 220 Q30 228 35 226 Q37 216 40 212 Q42 206 43 200 Q49 180 53 164 Q57 152 59 144 Q62 130 63 118 ' +
-  'Q65 108 67 102 Q70 116 72 132 Q75 150 75 162 Q73 176 72 188 Q69 210 70 236 Q72 262 75 288 Q73 300 73 316 ' +
-  'Q75 340 80 362 Q81 370 79 378 Q76 386 84 387 Q93 388 96 384 Q96 374 95 366 Q97 340 96 316 Q95 300 95 292 ' +
-  'Q97 266 98 236 Q99 214 100 204';
+  'M100 42 L93 42 L92 48 Q86 54 74 57 Q62 59 54 63 Q45 68 44 82 Q43 94 45.5 104 Q40 114 40.5 128 Q41 140 42 146 ' +
+  'Q35 154 33.5 166 Q33 184 33 196 Q28 206 28 218 Q30 226 35 224 Q37 214 39 208 Q41 202 42 198 ' +
+  'Q48 182 51 166 Q55 154 55 148 Q59 136 59 122 Q59 110 62 102 Q65 110 66 120 Q70 142 75 160 Q74 176 73 186 ' +
+  'Q64 204 64 226 Q66 254 73 278 Q75 284 73 290 Q67 304 68.5 320 Q71 342 78 360 Q80 370 78 378 Q75 386 84 387 ' +
+  'Q93 388 96 384 Q96 374 95 366 Q97 344 98.5 324 Q99 306 95 294 Q97 282 97 270 Q99 240 99 220 Q100 208 100 204';
+
+// A rounded ab block from y0 to y1, inner edge at the centre line.
+const ab = (y0: number, y1: number, xl: number) =>
+  `M${xl} ${y0 + 3} Q${xl} ${y0} ${xl + 3} ${y0} L97 ${y0} Q98.6 ${y0} 98.6 ${y0 + 2} L98.6 ${y1 - 2} Q98.6 ${y1} 96.6 ${y1} L${xl + 3} ${y1} Q${xl - 0.5} ${y1} ${xl} ${y1 - 3} Z`;
 
 type Shape = string;
 const FRONT: { m: Muscle; d: Shape[] }[] = [
-  { m: 'traps', d: ['M91 60 Q82 63 74 66 Q80 69 86 67 Q90 65 92 62 Z'] },
-  { m: 'sideDelts', d: ['M66 68 Q58 71 55 83 Q53 94 53.5 103 L57.5 103 Q57 90 60.5 80 Q63 73 68 69 Z'] },
-  { m: 'frontDelts', d: ['M74 66 Q64 69 60 80 Q57 91 58 103 Q63 98 66 88 Q70 76 78 69 Z'] },
-  { m: 'chest', d: ['M99 66 L80 67 Q70 72 67 90 Q71 104 86 107 Q96 107 99 100 Z'] },
-  { m: 'biceps', d: ['M58 106 Q52 114 52 128 Q53 138 56 142 Q61 132 62 118 Q62 110 58 106 Z'] },
-  { m: 'forearms', d: ['M55 147 Q47 160 42 178 Q40 188 39 196 L43 198 Q48 182 52 168 Q56 156 58 148 Z'] },
-  { m: 'abs', d: [
-    'M89 110 L98 110 L98 123 L89 124 Q87 116 89 110 Z',
-    'M89 127 L98 126 L98 140 L89 141 Q88 134 89 127 Z',
-    'M89 144 L98 143 L98 157 L90 158 Q88 151 89 144 Z',
-    'M90 161 L98 160 L98 184 Q93 184 91 178 Q89 170 90 161 Z',
-  ] },
-  { m: 'obliques', d: ['M86 110 Q76 114 73 130 Q75 150 76 166 Q80 178 87 182 Q88 168 87 154 Q86 132 86 110 Z'] },
-  { m: 'quads', d: ['M77 194 Q71 216 73 246 Q75 270 82 286 Q88 290 92 284 Q95 262 94 238 Q92 212 86 198 Z'] },
-  { m: 'adductors', d: ['M89 200 Q95 204 98 212 Q97 232 95 248 Q92 234 91 220 Q90 208 89 200 Z'] },
-  { m: 'calves', d: ['M76 302 Q73 320 77 342 Q80 352 83 354 Q84 332 83 316 Q82 306 79 300 Z', 'M93 302 Q96 320 94 344 L90 348 Q88 330 89 314 Q90 306 93 302 Z'] },
+  { m: 'traps', d: ['M91.5 51 Q84 56 76 59 Q85 62 91.5 59 Z'] },
+  { m: 'sideDelts', d: ['M61 62 Q49 65 46.5 80 Q45 92 47.5 103 L52 102 Q52 88 55 78 Q58 68 65 63.5 Z'] },
+  { m: 'frontDelts', d: ['M76 61 Q66 63 60 74 Q56 86 55 101 Q62 98 65 88 Q68 74 80 64 Z'] },
+  { m: 'chest', d: ['M99 62 L82 63 Q72 66 68.5 80 Q66 94 72 102 Q84 110 99 104 Z'] },
+  { m: 'biceps', d: ['M57 106 Q47 112 43.5 126 Q44 138 48 144 Q55 138 57 124 Q58 112 57 106 Z'] },
+  { m: 'forearms', d: ['M52 150 Q41 156 37 168 Q35.5 184 36 194 L41 196 Q46 180 49.5 168 Q53 158 53 150 Z'] },
+  { m: 'abs', d: [ab(108, 120.5, 88.5), ab(123, 135.5, 88.5), ab(138, 150.5, 89), 'M89.5 153 L98.6 153 L98.6 180 Q93 180 91 172 Q89 163 89.5 153 Z'] },
+  { m: 'obliques', d: ['M86 108 Q77 110 68.5 118 Q71 134 74 150 Q78 168 87 178 Q86 160 86 140 Z'] },
+  { m: 'quads', d: ['M76 192 Q66 208 66.5 230 Q68 256 77 276 Q86 282 92 278 Q96 258 96 236 Q94 212 87 196 Z'] },
+  { m: 'adductors', d: ['M89 198 Q96 202 99 212 Q98 232 96 250 Q92 232 91 218 Q90 206 89 198 Z'] },
+  { m: 'calves', d: ['M74 294 Q68 310 70 328 Q74 344 80 350 Q82 330 81 314 Q80 302 77 296 Z', 'M94 298 Q99 312 97.5 330 Q95 342 92 348 Q89 330 90 314 Q91 304 94 298 Z'] },
+];
+const FRONT_LINES = [
+  'M92.5 53 Q84 58 76 61', // collarbone
+  'M80 206 Q83 240 87 272', // quad split
+  'M75 280 Q82 292 92 284', // knee
+  'M78 120 L74 126 M79 132 L75 138 M80 144 L76 150', // serratus
 ];
 
 const BACK: { m: Muscle; d: Shape[] }[] = [
-  { m: 'traps', d: ['M100 50 L93 52 Q86 60 74 65 Q86 70 92 86 Q96 102 100 118 Z'] },
-  { m: 'rearDelts', d: ['M72 67 Q60 70 55.5 83 Q53 94 53.5 103 L58 103 Q60 88 67 78 Q72 72 78 70 Z'] },
-  { m: 'upperBack', d: ['M79 71 Q88 78 90 92 Q86 100 76 102 Q69 100 66 96 Q68 82 79 71 Z'] },
-  { m: 'lats', d: ['M68 102 Q80 106 91 106 Q92 122 91 140 Q88 156 82 172 Q76 168 75 160 Q74 130 68 102 Z'] },
-  { m: 'lowerBack', d: ['M94 122 L99 120 L99 184 L90 184 Q89 172 90.5 158 Q93 140 94 122 Z'] },
-  { m: 'triceps', d: ['M58 106 Q51 114 51 128 Q52 140 56 144 Q62 132 63 118 Q62 110 58 106 Z'] },
-  { m: 'forearms', d: ['M55 147 Q47 160 42 178 Q40 188 39 196 L43 198 Q48 182 52 168 Q56 156 58 148 Z'] },
-  { m: 'glutes', d: ['M76 188 Q71 200 74 212 Q84 222 99 216 L99 192 Q88 186 76 188 Z'] },
-  { m: 'hamstrings', d: ['M73 220 Q71 248 76 276 Q80 288 86 290 Q93 270 95 246 Q96 230 96 222 Q85 226 73 220 Z'] },
-  { m: 'calves', d: ['M77 296 Q71 314 75 334 Q80 346 87 344 Q94 328 95 310 Q94 298 89 293 Q82 291 77 296 Z'] },
+  { m: 'traps', d: ['M100 44 L93 46 Q88 54 76 58 Q68 61 66 63 Q84 68 91 84 Q96 100 100 116 Z'] },
+  { m: 'rearDelts', d: ['M64 62 Q50 65 46.5 80 Q45 92 47.5 103 L54 102 Q56 88 62 78 Q68 70 76 66 Z'] },
+  { m: 'upperBack', d: ['M77 68 Q87 74 90 88 Q86 98 76 100 Q68 99 64 94 Q66 80 77 68 Z'] },
+  { m: 'lats', d: ['M64.5 100 Q76 104 90 104 Q92 120 91 138 Q87 156 81 170 Q77 164 76 154 Q71 126 64.5 100 Z'] },
+  { m: 'lowerBack', d: ['M94 122 L99 120 L99 182 L90 182 Q89 170 90.5 156 Q93 138 94 122 Z'] },
+  { m: 'triceps', d: ['M57 106 Q46 112 43 126 Q43.5 140 48 146 Q56 136 57.5 122 Q58 112 57 106 Z'] },
+  { m: 'forearms', d: ['M52 150 Q41 156 37 168 Q35.5 184 36 194 L41 196 Q46 180 49.5 168 Q53 158 53 150 Z'] },
+  { m: 'glutes', d: ['M75 186 Q69 200 72 214 Q84 224 99 218 L99 190 Q88 184 75 186 Z'] },
+  { m: 'hamstrings', d: ['M70 222 Q66.5 248 74 274 Q81 286 87 286 Q94 266 96 244 Q97 230 97 224 Q85 228 70 222 Z'] },
+  { m: 'calves', d: ['M75 294 Q67 310 70.5 328 Q76 342 85 342 Q86 320 85 300 Z', 'M88 296 Q98 304 98 322 Q96 338 87 342 Q88 320 88 300 Z'] },
+];
+const BACK_LINES = [
+  'M52 124 Q53 132 56 136', // triceps horseshoe
+  'M84 232 Q85 256 86 282', // hamstring split
+  'M78 344 Q84 356 92 344', // achilles
 ];
 
 /** Front and back line-art figures; each muscle fills with its rank colour. */
@@ -74,23 +84,24 @@ export function BodyMap({ scores, selected, onSelect }: Props) {
     );
   };
 
-  const Figure = ({ x, muscles, label }: { x: number; muscles: typeof FRONT; label: string }): ReactNode => (
+  const Figure = ({ x, muscles, lines, label }: { x: number; muscles: typeof FRONT; lines: string[]; label: string }): ReactNode => (
     <g transform={`translate(${x} 0)`}>
-      <path className="bm-skin" d={OUTLINE + ' L100 47 Z'} />
-      <path className="bm-skin" d={OUTLINE + ' L100 47 Z'} transform={MIRROR} />
-      <ellipse className="bm-skin" cx="100" cy="27" rx="15" ry="20" />
+      <path className="bm-skin" d={OUTLINE + ' L100 42 Z'} />
+      <path className="bm-skin" d={OUTLINE + ' L100 42 Z'} transform={MIRROR} />
+      <ellipse className="bm-skin" cx="100" cy="25" rx="13" ry="17" />
       {muscles.map((g) => <M key={g.m} m={g.m} d={g.d} />)}
+      {lines.map((l, k) => <g key={k} className="bm-detail"><path d={l} /><path d={l} transform={MIRROR} /></g>)}
       <path className="bm-line" d={OUTLINE} />
       <path className="bm-line" d={OUTLINE} transform={MIRROR} />
-      <ellipse className="bm-line" cx="100" cy="27" rx="15" ry="20" />
+      <ellipse className="bm-line" cx="100" cy="25" rx="13" ry="17" />
       <text x="100" y="402" textAnchor="middle" className="bm-label">{label}</text>
     </g>
   );
 
   return (
     <svg viewBox="0 0 420 408" className="bodymap" role="group" aria-label="Muscle ranks, front and back">
-      <Figure x={0} muscles={FRONT} label="FRONT" />
-      <Figure x={220} muscles={BACK} label="BACK" />
+      <Figure x={0} muscles={FRONT} lines={FRONT_LINES} label="FRONT" />
+      <Figure x={220} muscles={BACK} lines={BACK_LINES} label="BACK" />
     </svg>
   );
 }
