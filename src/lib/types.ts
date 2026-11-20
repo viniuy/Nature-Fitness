@@ -14,6 +14,8 @@ export interface Exercise {
   tier?: string;
   /** Warm-up ramp before the work sets: bar = barbell (never below 20 kg). */
   ramp?: { bar: boolean; reps: number[] };
+  /** How much + weight adds, in the exercise's unit. Defaults by equipment (see defaultStep). */
+  step?: number;
 }
 
 export interface WarmupItem {

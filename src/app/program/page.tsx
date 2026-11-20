@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { saveRecord, seedProgram } from '@/lib/db';
 import { useActiveProgram } from '@/lib/hooks';
+import { defaultStep, fmtNum, parseNum } from '@/lib/training';
 import type { Day, Exercise, Program, Unit, WarmupItem } from '@/lib/types';
 import { Icon } from '@/components/Icon';
 
@@ -186,6 +187,7 @@ function ExerciseEditor({ ex, onChange, onMove, onRemove }: {
             </select>
           </div>
           <div><label className="lbl" htmlFor={f('tier')}>Tier</label><input id={f('tier')} className="field mono" maxLength={3} placeholder="S+" value={ex.tier ?? ''} onChange={(e) => onChange({ ...ex, tier: e.target.value || undefined })} /></div>
+          {ex.unit && <div><label className="lbl" htmlFor={f('step')}>Weight step</label><input id={f('step')} className="field mono" inputMode="decimal" placeholder={fmtNum(defaultStep(ex.name, ex.unit))} value={ex.step ?? ''} onChange={(e) => { const v = parseNum(e.target.value); onChange({ ...ex, step: v && v > 0 ? v : undefined }); }} /></div>}
           <div className="wide"><label className="lbl" htmlFor={f('hint')}>Cues and load notes</label><textarea id={f('hint')} className="field" value={ex.hint ?? ''} onChange={(e) => onChange({ ...ex, hint: e.target.value })} /></div>
           <div className="wide">
             <label className="row" style={{ gap: 10 }}>

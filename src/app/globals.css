@@ -515,3 +515,4 @@ h2 { font-size: 15px; margin: 22px 0 6px; }
 .setchip.on { background: var(--accent-soft); box-shadow: none; color: var(--accent); }
 .setchip.sel { box-shadow: 0 0 0 2px var(--accent); }
 .exline .bump { flex: none; height: 38px; padding: 0 12px; font-size: 13.5px; }
+.exline .bump { min-width: 62px; padding: 0 10px; }

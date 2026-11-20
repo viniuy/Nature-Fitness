@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { db, deleteRecord, saveRecord } from '@/lib/db';
 import { useActiveProgram, useSessions } from '@/lib/hooks';
-import { fmtDate, fmtNum, hasData, hasSet, historyFor, parseNum, sessionId, setScore, ymd } from '@/lib/training';
+import { defaultStep, fmtDate, fmtNum, hasData, hasSet, historyFor, parseNum, sessionId, setScore, ymd } from '@/lib/training';
 import type { Day, Exercise, Program, Session, SetEntry } from '@/lib/types';
 import { Icon } from './Icon';
 
@@ -155,7 +155,6 @@ function topOf(unit: Exercise['unit'], sets: SetEntry[] | undefined): Lift | nul
   return { w: best.w, r: best.r };
 }
 
-const STEP: Record<string, number> = { kg: 2.5, '+kg': 2.5, cm: 1 };
 
 function liftText(unit: Exercise['unit'], v: Lift | null, short = false) {
   if (!v) return 'Set';
@@ -202,10 +201,10 @@ function ExerciseRow({ ex, cur, sessions, update }: {
   });
   const put = (v: Lift | null): SetEntry => (v ? { w: unit ? v.w : null, r: v.r, done: true } : { w: null, r: null, done: false });
   const bumped = (v: Lift | null, dr: number, dw: number): Lift => ({
-    w: unit ? (v?.w ?? 0) + dw : null,
+    w: unit ? Math.round(((v?.w ?? 0) + dw) * 100) / 100 : null,
     r: (v?.r ?? 0) + dr,
   });
-  const step = STEP[unit ?? ''] ?? 2.5;
+  const step = ex.step ?? defaultStep(ex.name, unit);
 
   // Whole exercise: every set moves by the same amount from what it shows.
   const allBump = (dr: number, dw: number) => write((arr) => arr.map((_, i) => put(bumped(shown(i), dr, dw))));
@@ -257,7 +256,7 @@ function ExerciseRow({ ex, cur, sessions, update }: {
           })}
         </div>
         <button type="button" className="bump" onClick={() => plus(1, 0)}>+ rep</button>
-        {unit && <button type="button" className="bump" onClick={() => plus(0, step)}>+ {unit === 'cm' ? 'cm' : 'kg'}</button>}
+        {unit && <button type="button" className="bump" aria-label={`Add ${fmtNum(step)} ${unitText}`} onClick={() => plus(0, step)}>+{fmtNum(step)}</button>}
       </div>
 
       {editing && (

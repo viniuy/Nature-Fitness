@@ -86,3 +86,9 @@ export function rampText(ex: Exercise, last: Session | undefined): string | null
 export function unitLabel(unit: Unit): string {
   return unit === '+kg' ? '+kg' : unit ?? 'reps';
 }
+
+/** Machines and cable stacks go up 0.75 kg; free weights 0.5 kg; cm by 1. */
+export function defaultStep(name: string, unit: Unit): number {
+  if (unit === 'cm') return 1;
+  return /machine|cable|pulldown|pushdown|pec deck|face pull|smith|leg press/i.test(name) ? 0.75 : 0.5;
+}
