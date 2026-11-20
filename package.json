@@ -1,0 +1,36 @@
+{
+  "name": "nature-fitness",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Offline-first gym tracker and workout log for phone and desktop.",
+  "scripts": {
+    "ocr-assets": "node scripts/copy-ocr-assets.mjs",
+    "predev": "npm run ocr-assets",
+    "dev": "next dev",
+    "prebuild": "npm run ocr-assets",
+    "build": "next build && node scripts/build-sw.mjs",
+    "start": "npx serve out",
+    "typecheck": "tsc --noEmit",
+    "test": "tsx --test src/**/*.test.ts",
+    "test:evolt": "tsx scripts/test-evolt.ts"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.119.2",
+    "@tesseract.js-data/eng": "^1.0.0",
+    "dexie": "^4.4.7",
+    "dexie-react-hooks": "^4.4.0",
+    "next": "^16.4.6",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
+    "tesseract.js": "^7.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.6",
+    "@types/pngjs": "^6.0.5",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "pngjs": "^7.0.0",
+    "tsx": "^4.23.15",
+    "typescript": "^7.0.2"
+  }
+}

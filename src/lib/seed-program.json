@@ -1,0 +1,746 @@
+{
+  "id": "gym-log",
+  "name": "Gym Log 6-day split",
+  "days": [
+    {
+      "id": "d2",
+      "tag": "Mon",
+      "short": "Push",
+      "name": "Monday · Push",
+      "focus": "Chest and arm size, upper chest first. A few fast med-ball throws prime the pressing, overhead press leads for strength, then machines you can push close to failure safely. Triceps go last. Delts get light weight and higher reps.",
+      "warmup": [
+        {
+          "id": "w1",
+          "title": "Easy rower or jump rope, 5 minutes",
+          "detail": "Get warm and breathing a little harder, not tired."
+        },
+        {
+          "id": "w2",
+          "title": "Band pull-aparts, 2 × 15",
+          "detail": "Squeeze your shoulder blades together."
+        },
+        {
+          "id": "w3",
+          "title": "Scapular push-ups, 2 × 10",
+          "detail": "Arms straight, move only your shoulder blades."
+        },
+        {
+          "id": "w4",
+          "title": "Thoracic open books, 6 each side",
+          "detail": "Rotate your upper back, hips stay still."
+        },
+        {
+          "id": "w5",
+          "title": "Band external rotations, 2 × 12 each arm",
+          "detail": "Light and slow. Warms up the rotator cuff."
+        },
+        {
+          "id": "w6",
+          "title": "Short foot holds, 2 × 10 each foot",
+          "detail": "Quiet foot work you can do while the bar is being set up."
+        }
+      ],
+      "exercises": [
+        {
+          "id": "mbpass",
+          "name": "Medicine ball chest pass",
+          "sets": 3,
+          "scheme": "3 × 5 · Power",
+          "unit": "kg",
+          "hint": "Throw a 3 kg ball hard into a wall from your chest, catch it and reset. Rest about a minute so every throw is fast. Load: 3 kg. Stop the set while the throws are still fast. This primes your pressing, it is not a workout in itself."
+        },
+        {
+          "id": "ohp",
+          "name": "Overhead press",
+          "sets": 4,
+          "scheme": "4 × 5 · Shoulders",
+          "unit": "kg",
+          "hint": "Kept early for strength and because overhead pressing is your weak link. Log weight per hand if you use dumbbells. Add weight when all sets hit 5. Load: leave 1 to 2 reps in the tank on every set. Strength does not need failure, so save the grinding for the machines.",
+          "tier": "B+",
+          "ramp": {
+            "bar": false,
+            "reps": [
+              8,
+              5,
+              3
+            ]
+          }
+        },
+        {
+          "id": "incmach",
+          "name": "Incline chest press machine",
+          "sets": 4,
+          "scheme": "4 × 8 · Chest",
+          "unit": "kg",
+          "hint": "Handles level with your upper chest, elbows about 45 to 60 degrees from your body. Load: pick a weight you could do about 10 times, stop the first sets at 8, then take the last set to 0 or 1 reps in reserve. Add weight when all sets hit 8.",
+          "ramp": {
+            "bar": false,
+            "reps": [
+              8,
+              5,
+              3
+            ]
+          }
+        },
+        {
+          "id": "fly",
+          "name": "Fly machine",
+          "sets": 3,
+          "scheme": "3 × 12 · Chest",
+          "unit": "kg",
+          "hint": "Pause one second at the squeeze and control the way back for a deep stretch. Load: keep it light enough to control the stretch on all 12 reps. The stretch is the point, not the weight. Last set to 0 or 1 reps in reserve.",
+          "tier": "S"
+        },
+        {
+          "id": "lateral",
+          "name": "Single-arm cable lateral raise",
+          "sets": 4,
+          "scheme": "4 × 15 · Shoulders",
+          "unit": "kg",
+          "hint": "Per arm. The cable keeps tension at the bottom, where dumbbells go slack. Load: keep it light. You need 15 smooth reps with a slow 3 second lowering, so if you swing, the weight is too heavy.",
+          "tier": "S"
+        },
+        {
+          "id": "reardelt",
+          "name": "Reverse pec deck",
+          "sets": 4,
+          "scheme": "4 × 15 · Rear delts",
+          "unit": "kg",
+          "hint": "Chest against the pad, elbows only slightly bent, drive the weight back with your elbows. Superset with the lateral raises to save time. Load: light. If your traps take over, drop the weight.",
+          "tier": "S"
+        },
+        {
+          "id": "trimach",
+          "name": "Triceps overhead press machine",
+          "sets": 3,
+          "scheme": "3 × 10 · Triceps",
+          "unit": "kg",
+          "hint": "Full stretch at the bottom, lock out hard at the top, elbows still. Load: pick a weight where 10 reps are hard but clean. Add weight when all sets hit 10. A small 12-week study found overhead extensions grew the triceps about 40% more than pushdowns."
+        },
+        {
+          "id": "ohext",
+          "name": "Overhead cable triceps extension (bar)",
+          "sets": 3,
+          "scheme": "3 × 12 · Triceps",
+          "unit": "kg",
+          "hint": "Stretches the long head, the biggest part of the muscle. Elbows point forward and stay still. Lower until you feel a stretch, then fully extend. Load: you need 12 reps, so go lighter than your pushdown and do not let the elbows flare.",
+          "tier": "S+"
+        }
+      ]
+    },
+    {
+      "id": "d3",
+      "tag": "Tue",
+      "short": "Pull",
+      "name": "Tuesday · Pull",
+      "focus": "Back for the V-taper, then biceps and a little forearm work, plus side delts and loaded abs. Weighted pull-ups lead for strength, then the seated row and pulldown for growth.",
+      "warmup": [
+        {
+          "id": "w1",
+          "title": "Easy rower or bike, 5 minutes",
+          "detail": "Get warm and breathing a little harder, not tired."
+        },
+        {
+          "id": "w2",
+          "title": "Thoracic open books, 6 each side",
+          "detail": "Rotate your upper back, hips stay still."
+        },
+        {
+          "id": "w3",
+          "title": "Dead hang, 2 × 20 seconds",
+          "detail": "Relax your grip and let your shoulders stretch."
+        },
+        {
+          "id": "w4",
+          "title": "Scapular pull-ups, 2 × 8",
+          "detail": "Arms straight, pull your shoulder blades down."
+        },
+        {
+          "id": "w5",
+          "title": "Band pull-aparts, 2 × 15",
+          "detail": "Squeeze your shoulder blades together."
+        },
+        {
+          "id": "w6",
+          "title": "Band external rotations, 2 × 12 each arm",
+          "detail": "Light and slow. Balances all the pressing."
+        },
+        {
+          "id": "w7",
+          "title": "Serratus wall slide with a band, 1 × 10",
+          "detail": "Forearms on the wall, slide up and reach tall at the top."
+        },
+        {
+          "id": "w8",
+          "title": "Light face pulls, 1 × 15",
+          "detail": "Preps the rear delts and upper back."
+        }
+      ],
+      "exercises": [
+        {
+          "id": "pullup",
+          "name": "Pull-up",
+          "sets": 4,
+          "scheme": "4 × 6 · Back",
+          "unit": "+kg",
+          "hint": "Added weight, 0 for bodyweight. Add weight when all sets hit 6. Last known: about 8 strict. Load: if you cannot hit 6 on every set, stay at bodyweight and take cleaner reps. Leave 1 rep in the tank on the early sets.",
+          "tier": "A"
+        },
+        {
+          "id": "row",
+          "name": "Seated cable row",
+          "sets": 4,
+          "scheme": "4 × 8 · Back",
+          "unit": "kg",
+          "hint": "Chest up, pull to your lower ribs, let your shoulder blades stretch forward at the start. Load: heavy enough for 8 reps, but no rocking.",
+          "tier": "S"
+        },
+        {
+          "id": "pulldown",
+          "name": "Lat pulldown",
+          "sets": 3,
+          "scheme": "3 × 10 · Back",
+          "unit": "kg",
+          "hint": "Wide or neutral grip, pull to your upper chest. Load: moderate. You need 10 reps without leaning way back.",
+          "tier": "S"
+        },
+        {
+          "id": "facepull",
+          "name": "Face pull",
+          "sets": 3,
+          "scheme": "3 × 15 · Rear delts",
+          "unit": "kg",
+          "hint": "Rear delts and upper back. Keeps your shoulders healthy after all the pressing. Load: light. Pause at the back on each rep, and if your shoulders roll forward the weight is too heavy.",
+          "tier": "A"
+        },
+        {
+          "id": "bayes",
+          "name": "Bayesian cable curl (face away)",
+          "sets": 3,
+          "scheme": "3 × 12 · Biceps",
+          "unit": "kg",
+          "hint": "Per arm. Face away from the cable with your arm behind you for the biggest biceps stretch. Load: light, since the stretch makes it feel hard fast. You need 12 slow reps.",
+          "tier": "S+"
+        },
+        {
+          "id": "ezcurl",
+          "name": "EZ bar curl",
+          "sets": 3,
+          "scheme": "3 × 8 · Biceps",
+          "unit": "kg",
+          "hint": "Total weight on the bar. No swinging. Load: heavier than your isolation curls, about 8 reps with 1 rep left.",
+          "tier": "A"
+        },
+        {
+          "id": "hammer",
+          "name": "Hammer curl",
+          "sets": 3,
+          "scheme": "3 × 10 · Biceps",
+          "unit": "kg",
+          "hint": "Per hand. Last known: 10 kg. Load: pick a weight where all 10 reps stay strict. Add weight when all sets hit 10.",
+          "tier": "A"
+        },
+        {
+          "id": "revcurl",
+          "name": "Reverse EZ bar curl",
+          "sets": 2,
+          "scheme": "2 × 12 · Forearms",
+          "unit": "kg",
+          "hint": "Total weight on the bar. Overhand grip, elbows pinned to your sides. Load: start with about half of your regular EZ curl weight, since it runs well below it."
+        },
+        {
+          "id": "lateral3",
+          "name": "Single-arm cable lateral raise",
+          "sets": 4,
+          "scheme": "4 × 15 · Shoulders",
+          "unit": "kg",
+          "hint": "Per arm. Second side delt session of the week. Load: keep it light. 15 smooth reps with a slow 3 second lowering, no swinging.",
+          "tier": "S"
+        },
+        {
+          "id": "hlr",
+          "name": "Hanging leg raise",
+          "sets": 3,
+          "scheme": "3 × 10 · Core",
+          "unit": "+kg",
+          "hint": "Added weight, 0 for bodyweight. Loaded abs work. No swinging, slow on the way down. Load: bodyweight until 10 clean reps are easy, then hold a light dumbbell between your feet. Bend your knees if you cannot keep the swing out."
+        }
+      ]
+    },
+    {
+      "id": "d1",
+      "tag": "Thu",
+      "short": "Plyo",
+      "name": "Thursday · Plyo + Legs",
+      "focus": "Feet, ankles and jumping. Sprints and jumps first while you are fresh, then squats and calf work. About 105 foot contacts today, inside the NSCA 100 to 120 range for the start. Box jumps use the 76 cm box: land quietly and step down every rep. Every 4th week, cut the jumps by 40%. If volleyball replaces this day, skip the bounds on the weekend session that week. If you played in the last day, halve the jumps.",
+      "warmup": [
+        {
+          "id": "w1",
+          "title": "Easy bike or jump rope, 5 minutes",
+          "detail": "Get warm and breathing a little harder, not tired."
+        },
+        {
+          "id": "w2",
+          "title": "Ankle rocks, 2 × 10 each side, 2 second hold at the end",
+          "detail": "Knee over toes, heel stays down."
+        },
+        {
+          "id": "w3",
+          "title": "90/90 hip switches, 8 each side, then 90/90 hip lifts, 2 × 5 each side",
+          "detail": "Open the hips before you sprint and squat. Lift the front knee off the floor on the hip lifts."
+        },
+        {
+          "id": "w4",
+          "title": "Glute bridge, 2 × 10",
+          "detail": "Squeeze hard at the top to wake up the glutes."
+        },
+        {
+          "id": "w5",
+          "title": "Short foot holds, 2 × 8 each foot",
+          "detail": "Draw the ball of your foot toward the heel without curling your toes. Builds the arch for landings and relevé."
+        },
+        {
+          "id": "w6",
+          "title": "Low ankle bounces, 2 × 10",
+          "detail": "Quick, stiff ankles. Primes you for sprints and pogo hops."
+        },
+        {
+          "id": "w7",
+          "title": "Two light box jumps on a low box",
+          "detail": "Practice the landing before the work sets."
+        }
+      ],
+      "exercises": [
+        {
+          "id": "accel",
+          "name": "Acceleration sprint",
+          "sets": 5,
+          "scheme": "5 × 15 m",
+          "unit": null,
+          "hint": "Lean forward and push the ground away for the first few steps, then stand tall. Walk back for rest. Log 1 rep per sprint. Load: about 90% effort, never a grind. Skip if your gym has no 15 m of open space."
+        },
+        {
+          "id": "pogo",
+          "name": "Pogo hops",
+          "sets": 3,
+          "scheme": "3 × 15",
+          "unit": null,
+          "hint": "Stiff ankles, quick ground contact, stay tall. Log the reps. Load: bodyweight only. Move to 3 × 20 after week 4 if the contacts stay quick and quiet."
+        },
+        {
+          "id": "boxjump",
+          "name": "Box jump",
+          "sets": 4,
+          "scheme": "4 × 4",
+          "unit": "cm",
+          "hint": "Log the box height. Step down, never jump down. Land softly and rest fully between sets. Load: the gym box is 76 cm (30 in) and you clear it easily, so the goal now is a quiet, stable landing every rep, not a higher box. Skip depth jumps for now. NSCA suggests a squat of about 1.5 × bodyweight (about 105 kg) before heavier plyos."
+        },
+        {
+          "id": "slhop",
+          "name": "Single-leg forward hop",
+          "sets": 3,
+          "scheme": "3 × 4 each leg",
+          "unit": null,
+          "hint": "Hop forward, hold the landing on one foot for two seconds, then reset. Load: bodyweight, short hops first. A good check before these: you can balance on one leg for 30 seconds without wobbling."
+        },
+        {
+          "id": "dropstick",
+          "name": "Drop-and-stick landing",
+          "sets": 2,
+          "scheme": "2 × 5 each leg",
+          "unit": "cm",
+          "hint": "Step off a low box (20 to 30 cm), land on one foot, knee over toes, and hold still for two seconds. Log the box height. Load: bodyweight. Stop the set if you land loud or your knee caves in."
+        },
+        {
+          "id": "squat",
+          "name": "Back squat",
+          "sets": 4,
+          "scheme": "4 × 4",
+          "unit": "kg",
+          "hint": "Total weight on the bar. Last known: 70 kg. Load: add 2.5 kg a week when every rep is fast and clean, and leave 1 to 2 reps in the tank. A stronger squat is what unlocks higher boxes later.",
+          "tier": "S",
+          "ramp": {
+            "bar": true,
+            "reps": [
+              8,
+              5,
+              3
+            ]
+          }
+        },
+        {
+          "id": "bss",
+          "name": "Bulgarian split squat",
+          "sets": 2,
+          "scheme": "2 × 8 each leg",
+          "unit": "kg",
+          "hint": "Dumbbell in each hand, log the weight per hand. Last known: 10 kg. Load: pick a weight where all 8 reps per leg stay deep and balanced. Add weight when both sets hit 8.",
+          "tier": "S"
+        },
+        {
+          "id": "slcalf",
+          "name": "Single-leg calf raise",
+          "sets": 4,
+          "scheme": "4 × 8 each leg",
+          "unit": "+kg",
+          "hint": "Added weight, 0 for bodyweight. Rise tall like a relevé, pause one second, lower for three seconds, knee neutral. After the last set hold the top for 30 seconds on each leg. Load: heavy enough that rep 8 is hard but clean. Add weight when all sets hit 8. No pain in the foot or ankle."
+        },
+        {
+          "id": "tib",
+          "name": "Tibialis raise",
+          "sets": 3,
+          "scheme": "3 × 15",
+          "unit": "+kg",
+          "hint": "Added weight, 0 for bodyweight. Heels on the floor, back against a wall, lift your toes high and lower slowly. No bouncing. Load: bodyweight until 15 reps feel easy. Ease off if you feel ankle pain."
+        }
+      ]
+    },
+    {
+      "id": "d5",
+      "tag": "Fri",
+      "short": "Arms",
+      "name": "Friday · Chest + Arms",
+      "focus": "Second chest session, a second back exposure, and biceps and triceps volume for size. A heavy press leads for strength, then machines. Superset the pushdown and the lateral raise, and the two curls at the end, to stay inside 75 minutes. Arm isolation work goes to failure on the last set. No throws or jumps before the pressing.",
+      "warmup": [
+        {
+          "id": "w1",
+          "title": "Easy rower or jump rope, 5 minutes",
+          "detail": "Get warm and breathing a little harder, not tired."
+        },
+        {
+          "id": "w2",
+          "title": "Band pull-aparts, 2 × 15",
+          "detail": "Squeeze your shoulder blades together."
+        },
+        {
+          "id": "w3",
+          "title": "Push-up plus, 2 × 10",
+          "detail": "At the top, push your upper back toward the ceiling."
+        },
+        {
+          "id": "w4",
+          "title": "Scapular push-ups with a 2 second hold, 2 × 10",
+          "detail": "Arms straight, hold the shoulder blades wide at the top."
+        },
+        {
+          "id": "w5",
+          "title": "Band shoulder dislocates, 10 reps",
+          "detail": "Wide grip, slow, pain-free range only."
+        },
+        {
+          "id": "w6",
+          "title": "Light curl and pushdown, 1 × 15 each",
+          "detail": "Warms the elbows before the heavy arm work."
+        }
+      ],
+      "exercises": [
+        {
+          "id": "flat",
+          "name": "Flat dumbbell press",
+          "sets": 4,
+          "scheme": "4 × 6 · Chest",
+          "unit": "kg",
+          "hint": "Per hand. Last known: 17.5 kg. Your heavy chest anchor for the week. Load: heavy enough for 6 reps with 1 left. Control the lowering for a full stretch. Add weight when all sets hit 6.",
+          "tier": "A",
+          "ramp": {
+            "bar": false,
+            "reps": [
+              8,
+              5,
+              3
+            ]
+          }
+        },
+        {
+          "id": "machpress",
+          "name": "Machine chest press",
+          "sets": 3,
+          "scheme": "3 × 8 · Chest",
+          "unit": "kg",
+          "hint": "Flat chest press machine, stable so you can push close to failure safely. Load: leave 1 rep in the tank on the first set, then 0 or 1 on the last two. Add weight when all sets hit 8.",
+          "tier": "S+",
+          "ramp": {
+            "bar": false,
+            "reps": [
+              8,
+              5,
+              3
+            ]
+          }
+        },
+        {
+          "id": "dips",
+          "name": "Dips",
+          "sets": 2,
+          "scheme": "2 × 10 · Chest and triceps",
+          "unit": "+kg",
+          "hint": "Added weight, 0 for bodyweight. Lean forward slightly to load the lower chest, controlled depth. Load: bodyweight until 10 clean reps are easy. If your shoulders pinch at the bottom, stop higher or use the assisted machine.",
+          "tier": "A"
+        },
+        {
+          "id": "pulldown5",
+          "name": "Lat pulldown (wide grip)",
+          "sets": 3,
+          "scheme": "3 × 10 · Back",
+          "unit": "kg",
+          "hint": "Second back session of the week, for width. Pull to your upper chest and let your arms stretch fully at the top. Load: moderate. 10 controlled reps without leaning way back.",
+          "tier": "S"
+        },
+        {
+          "id": "pushdown",
+          "name": "Triceps pushdown (bar)",
+          "sets": 3,
+          "scheme": "3 × 10 · Triceps",
+          "unit": "kg",
+          "hint": "Use the straight bar, elbows pinned. Superset with the lateral raise below. Load: moderate. 10 clean reps, no leaning over the bar.",
+          "tier": "A"
+        },
+        {
+          "id": "dblateral",
+          "name": "Dumbbell lateral raise",
+          "sets": 4,
+          "scheme": "4 × 15 · Shoulders",
+          "unit": "kg",
+          "hint": "Per hand. Third side delt exposure of the week. Lead with your elbows and stop at shoulder height. Load: very light. 15 reps with a slow 3 second lowering and no swinging."
+        },
+        {
+          "id": "ohdb",
+          "name": "One-arm dumbbell overhead extension",
+          "sets": 2,
+          "scheme": "2 × 12 · Triceps",
+          "unit": "kg",
+          "hint": "Per arm. Another overhead variation for the long head. Load: light. 12 reps with the elbow pointing up and still. Skip it if your shoulder complains.",
+          "tier": "A"
+        },
+        {
+          "id": "inccurl",
+          "name": "Incline dumbbell curl",
+          "sets": 3,
+          "scheme": "3 × 12 · Biceps",
+          "unit": "kg",
+          "hint": "Per hand. Let your arms hang back for a full stretch. Load: light. This one feels heavy fast, so go lighter than you think for 12 full-range reps. Last set to failure.",
+          "tier": "A"
+        },
+        {
+          "id": "preacher",
+          "name": "Preacher curl machine",
+          "sets": 2,
+          "scheme": "2 × 10 · Biceps",
+          "unit": "kg",
+          "hint": "Added to push arm growth: a second biceps movement on Friday, so biceps get hit hard twice a week. Slow 3 second lowering, full stretch at the bottom. Load: take both sets to failure, the machine makes that safe. Add weight when both sets hit 10.",
+          "tier": "A"
+        }
+      ]
+    },
+    {
+      "id": "d4",
+      "tag": "Wknd",
+      "short": "Deads",
+      "name": "Weekend · Deadlift + Power",
+      "focus": "Saturday or Sunday. Bounds and rotational throws first while you are fresh, then hang cleans and paused deadlifts to fix the floor position. Core stays powerful and stable, calves get heavy work. Keep 48 hours or more after Thursday plyos. Every 4th week, cut the jumps and throws by 40%.",
+      "warmup": [
+        {
+          "id": "w1",
+          "title": "Easy bike or jump rope, 5 minutes",
+          "detail": "Get warm and breathing a little harder, not tired."
+        },
+        {
+          "id": "w2",
+          "title": "Couch stretch, 30 seconds each leg",
+          "detail": "Opens the hip flexors for cleaner pulls."
+        },
+        {
+          "id": "w3",
+          "title": "90/90 hip switches, 8 each side",
+          "detail": "Open the hips before you hinge and jump."
+        },
+        {
+          "id": "w4",
+          "title": "Glute bridge, 2 × 10",
+          "detail": "Squeeze hard at the top to wake up the glutes."
+        },
+        {
+          "id": "w5",
+          "title": "Good mornings with an empty bar, 2 × 8",
+          "detail": "Push your hips back and keep a flat back."
+        },
+        {
+          "id": "w6",
+          "title": "Lateral hops, 2 × 6 each side",
+          "detail": "Light and quick. Stick each landing."
+        },
+        {
+          "id": "w7",
+          "title": "Empty-bar hang clean pulls, 2 × 5",
+          "detail": "Bar close to your body, finish tall with a shrug."
+        }
+      ],
+      "exercises": [
+        {
+          "id": "bound",
+          "name": "Lateral bound",
+          "sets": 3,
+          "scheme": "3 × 4 each side",
+          "unit": null,
+          "hint": "Push off the outside leg and stick the landing. Load: bodyweight. Under 30 foot contacts, so quality over fatigue. Stop if your landings get sloppy."
+        },
+        {
+          "id": "mbthrow",
+          "name": "Medicine ball rotational throw",
+          "sets": 4,
+          "scheme": "4 × 5 each side · Core",
+          "unit": "kg",
+          "hint": "Ball weight in kg. Throw hard into a wall or to a partner, rotating from the hips. Load: start with a 3 kg ball. Coaches use 3 to 5 kg and cue throwing as hard as you can, so go lighter if the throw slows down. Rest fully between sets."
+        },
+        {
+          "id": "hangclean",
+          "name": "Hang clean (learning)",
+          "sets": 4,
+          "scheme": "4 × 3",
+          "unit": "kg",
+          "hint": "Stage 1: hang clean pull with no catch, empty bar (20 kg). Stage 2: add the catch once the pull is fast and the bar stays close. Load: stay under 40 kg until it feels smooth. Technique work is usually done at 75 to 80% of max or lighter, so light is correct. Rest 2 to 3 minutes. Film a set from the side."
+        },
+        {
+          "id": "dl",
+          "name": "Paused deadlift",
+          "sets": 4,
+          "scheme": "4 × 3 · 2 s pause",
+          "unit": "kg",
+          "hint": "Total weight on the bar. Max: 140 kg (Nov 2026). Your lockout is solid but your form breaks off the floor, so pause 2 seconds just below the knee on every rep, then finish. Load: 100 to 110 kg, rest 2 to 3 minutes. Pull the slack out before the bar leaves the floor, keep lats tight and push the floor away. Film from the side. Stop the set if your hips shoot up or your back rounds. Hold off on testing a new max for a few weeks.",
+          "tier": "A",
+          "ramp": {
+            "bar": true,
+            "reps": [
+              5,
+              3,
+              2
+            ]
+          }
+        },
+        {
+          "id": "sitcalf",
+          "name": "Seated calf raise",
+          "sets": 4,
+          "scheme": "4 × 10 · Calves",
+          "unit": "kg",
+          "hint": "Bent knee shifts the work to the soleus, the deeper calf muscle that absorbs landings. Full range, pause at the top, lower slowly. Load: heavy enough that rep 10 is hard but clean. Add weight when all sets hit 10."
+        },
+        {
+          "id": "carry",
+          "name": "Suitcase carry",
+          "sets": 3,
+          "scheme": "3 × 20 m each side · Core",
+          "unit": "kg",
+          "hint": "One dumbbell in one hand, walk tall without leaning. Log the weight in kg and the distance in metres under reps. Load: moderate. If you lean toward the weight or your hips tilt, it is too heavy."
+        },
+        {
+          "id": "pallof",
+          "name": "Pallof press",
+          "sets": 3,
+          "scheme": "3 × 10 each side · Core",
+          "unit": "kg",
+          "hint": "Cable at chest height. Press out and resist the twist. Hold one second at full reach. Load: light. If your hips rotate, the weight is too heavy."
+        },
+        {
+          "id": "cossack",
+          "name": "Cossack squat (3 s hold)",
+          "sets": 2,
+          "scheme": "2 × 5 each side",
+          "unit": "+kg",
+          "hint": "Added weight, 0 for bodyweight. Sit deep to one side with the other leg straight and the heel down, hold the bottom for 3 seconds. Opens the hips and adductors for dance. Load: bodyweight. Stay low-load so it does not tire your legs."
+        }
+      ]
+    },
+    {
+      "id": "d6",
+      "tag": "Any",
+      "short": "Dance",
+      "name": "Any day · Dance + Mobility",
+      "focus": "About 20 minutes, outside the 5-day rotation. Do it after a lighter session or on the weekend. On Wednesday, keep to the 10-minute version so your legs are fresh for Thursday plyos. Only 10 minutes? Do the Copenhagen plank, slider curl, hip CARs and wall slides. Joining the gym dance class beats everything here, so note it in the session notes.",
+      "warmup": [
+        {
+          "id": "w1",
+          "title": "Easy bike or walk, 5 minutes",
+          "detail": "Just get warm. This session should feel easy."
+        },
+        {
+          "id": "w2",
+          "title": "Cat-cow into a rib-cage circle, 1 × 6",
+          "detail": "Move one segment of your spine at a time."
+        },
+        {
+          "id": "w3",
+          "title": "Thoracic extension over a bench, 1 × 8",
+          "detail": "Arms overhead, open the upper back without flaring your ribs."
+        }
+      ],
+      "exercises": [
+        {
+          "id": "copen",
+          "name": "Copenhagen plank (short lever)",
+          "sets": 3,
+          "scheme": "3 × 20 s each side",
+          "unit": null,
+          "hint": "Top knee on a bench, body in a straight line. Log the seconds as reps. Load: bodyweight. Builds adductor strength for splits and side kicks. Stop if your groin pinches."
+        },
+        {
+          "id": "straddle",
+          "name": "Active straddle lift-off",
+          "sets": 3,
+          "scheme": "3 × 5 · 5 s hold",
+          "unit": null,
+          "hint": "Sit in a straddle with your hands on the floor and lift one leg a few centimetres, knee straight, and hold for five seconds. Load: bodyweight. If you cannot lift it, you do not own that range yet."
+        },
+        {
+          "id": "slider",
+          "name": "Hamstring slider curl (slow lowering)",
+          "sets": 3,
+          "scheme": "3 × 5 · 3 to 4 s",
+          "unit": null,
+          "hint": "Lie on your back with heels on sliders or towels and your hips up. Slowly straighten your legs over 3 to 4 seconds, then bring them back. Load: bodyweight. Hamstring strength at long length helps kicks and splits."
+        },
+        {
+          "id": "hipcar",
+          "name": "Hip rotation CARs",
+          "sets": 2,
+          "scheme": "2 × 5 each side",
+          "unit": null,
+          "hint": "Standing with a light support, draw the biggest slow circle you can with your knee while your pelvis stays still. Load: bodyweight. Smooth and controlled, not fast."
+        },
+        {
+          "id": "foot",
+          "name": "Toe yoga + band inversion and eversion",
+          "sets": 2,
+          "scheme": "2 × 30 s each foot",
+          "unit": null,
+          "hint": "Lift your big toe while the other four stay down, then reverse. Then move the foot in and out against a light band. Log the seconds as reps. Load: light band. Builds the small foot muscles that calf raises skip."
+        },
+        {
+          "id": "wslide",
+          "name": "Wall slide with lift-off",
+          "sets": 2,
+          "scheme": "2 × 8",
+          "unit": null,
+          "hint": "Forearms on a wall, slide up, then lift the forearms off the wall at the top. Load: bodyweight. Wakes up the muscles that hold your shoulder blades after all the pressing."
+        },
+        {
+          "id": "ytw",
+          "name": "Prone Y-T-W",
+          "sets": 2,
+          "scheme": "2 × 10",
+          "unit": "+kg",
+          "hint": "Added weight, 0 for bodyweight. Lie face down on an incline bench or the floor and raise your arms into a Y, then a T, then a W. Load: none or very light. Upper back and lower traps for shoulder health."
+        }
+      ]
+    }
+  ],
+  "weekdays": {
+    "0": "d4",
+    "1": "d2",
+    "2": "d3",
+    "3": "d6",
+    "4": "d1",
+    "5": "d5",
+    "6": "d4"
+  }
+}
