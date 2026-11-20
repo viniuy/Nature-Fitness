@@ -311,7 +311,7 @@ function ExerciseFocus({ ex, cur, sessions, update, motion }: {
 
   const v = shown(at);
   const bump = (dr: number, dw: number) => {
-    const next = { w: unit ? Math.round(((v?.w ?? 0) + dw) * 100) / 100 : null, r: Math.max(0, (v?.r ?? 0) + dr) };
+    const next = { w: unit ? Math.max(0, Math.round(((v?.w ?? 0) + dw) * 100) / 100) : null, r: Math.max(0, (v?.r ?? 0) + dr) };
     if (isLogged(at)) write(at, next); else setDrafts({ ...drafts, [at]: next });
   };
   const tapSet = (k: number) => {
@@ -367,8 +367,18 @@ function ExerciseFocus({ ex, cur, sessions, update, motion }: {
       )}
 
       <div className="fx-btns">
-        <button type="button" onClick={() => bump(1, 0)}>+1 rep</button>
-        {unit && <button type="button" onClick={() => bump(0, step)}>+{fmtNum(step)} {unitText}</button>}
+        <div className="stepper" role="group" aria-label="Reps">
+          <button type="button" aria-label="Minus 1 rep" onClick={() => bump(-1, 0)}>−</button>
+          <span>1 rep</span>
+          <button type="button" aria-label="Plus 1 rep" onClick={() => bump(1, 0)}>+</button>
+        </div>
+        {unit && (
+          <div className="stepper" role="group" aria-label="Weight">
+            <button type="button" aria-label={`Minus ${fmtNum(step)} ${unitText}`} onClick={() => bump(0, -step)}>−</button>
+            <span>{fmtNum(step)} {unitText}</span>
+            <button type="button" aria-label={`Plus ${fmtNum(step)} ${unitText}`} onClick={() => bump(0, step)}>+</button>
+          </div>
+        )}
       </div>
     </div>
   );
