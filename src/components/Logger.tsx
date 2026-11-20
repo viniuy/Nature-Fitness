@@ -145,49 +145,108 @@ function Workout({ program, day, cur, sessions, date, today, saved, update, pick
   const [idx, setIdx] = useState(firstOpen);
   const [panel, setPanel] = useState(false);
   const [dir, setDir] = useState<'' | 'from-next' | 'from-prev'>('');
+  const [focused, setFocused] = useState(false);
   const touch = useRef<number | null>(null);
-  useEffect(() => { setIdx(firstOpen()); }, [day.id, date]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { setIdx(firstOpen()); setFocused(false); }, [day.id, date]); // eslint-disable-line react-hooks/exhaustive-deps
+  // The phone's back gesture leaves the exercise and returns to the list.
+  useEffect(() => {
+    const onPop = () => setFocused(false);
+    window.addEventListener('popstate', onPop);
+    return () => window.removeEventListener('popstate', onPop);
+  }, []);
 
   const i = Math.min(idx, exs.length - 1);
   const ex = exs[i];
+  const open = (k: number) => {
+    setDir(''); setIdx(k); setFocused(true); setPanel(false);
+    window.history.pushState({ nfFocus: true }, '');
+    window.scrollTo({ top: 0 });
+  };
+  const back = () => {
+    if (window.history.state?.nfFocus) window.history.back(); else setFocused(false);
+    window.scrollTo({ top: 0 });
+  };
   const go = (n: number) => { setDir(n > i ? 'from-next' : n < i ? 'from-prev' : ''); setIdx(Math.max(0, Math.min(exs.length - 1, n))); window.scrollTo({ top: 0, behavior: 'smooth' }); };
   const loggedDays = new Set(sessions.filter((s) => s.date === date).map((s) => s.dayId));
   const lastFor = (e: Exercise) => historyFor(sessions, e.id, cur.id)[0]?.sets[e.id] ?? [];
 
   if (!ex) return <p className="empty">This day has no exercises yet. Add some on the Program page.</p>;
 
+  const totalDone = exs.filter((e) => doneCount(e) >= e.sets).length;
+  const rows = (
+    <ol>
+      {exs.map((e, k) => {
+        const mine = cur.sets[e.id] ?? [];
+        const n = doneCount(e);
+        const text = n ? summary(e.unit, mine) : summary(e.unit, lastFor(e)) || `${e.sets} sets`;
+        return (
+          <li key={e.id}>
+            <button type="button" className={`${focused && k === i ? 'cur' : ''}${n >= e.sets ? ' done' : n ? ' part' : ''}`} onClick={() => (focused ? go(k) : open(k))}>
+              <span className="dot" aria-hidden />
+              <span className="nm">{e.name}</span>
+              <span className="sm">{n && n < e.sets ? `${n}/${e.sets} · ` : ''}{text}</span>
+              {!focused && <Icon name="right" size={16} />}
+            </button>
+          </li>
+        );
+      })}
+    </ol>
+  );
+  const segs = (
+    <div className="segs" aria-hidden>
+      {exs.map((e, k) => (
+        <i key={e.id} className={focused && k === i ? 'cur' : ''}><b style={{ width: `${Math.min(1, doneCount(e) / e.sets) * 100}%` }} /></i>
+      ))}
+    </div>
+  );
+
+  if (!focused) {
+    return (
+      <>
+        <div className="ftop">
+          <button type="button" className="daybtn" aria-expanded={panel} onClick={() => setPanel(!panel)}>
+            {day.name.split(' · ').pop()}<Icon name={panel ? 'up' : 'down'} size={15} />
+          </button>
+          <span className="muted">{date === today ? '' : `${fmtDate(date, { day: 'numeric', month: 'short' })} · `}{totalDone} / {exs.length} done</span>
+        </div>
+        <span className="sr-only" aria-live="polite">{saved === 'saved' ? 'Saved' : ''}</span>
+        {panel && (
+          <div className="fpanel">
+            <div className="days" role="group" aria-label="Training day">
+              {program.days.map((d) => (
+                <button key={d.id} type="button" aria-pressed={d.id === day.id}
+                  className={`chip${d.id === day.id ? ' on' : ''}${loggedDays.has(d.id) ? ' logged' : ''}`}
+                  onClick={() => { pickDay(d.id); setPanel(false); }}>
+                  <span className="chip-s">{d.short}</span>
+                </button>
+              ))}
+            </div>
+            <label className="dateline">
+              {date === today ? 'Today' : fmtDate(date, { weekday: 'short', day: 'numeric', month: 'short' })}
+              <Icon name="down" />
+              <input type="date" aria-label="Session date" value={date} max={today} onChange={(e) => pickDate(e.target.value)} />
+            </label>
+          </div>
+        )}
+        {segs}
+        <section className="upnext daylist">
+          <h2>Tap the exercise you&apos;re doing now</h2>
+          {rows}
+        </section>
+      </>
+    );
+  }
+
   return (
     <>
       <div className="ftop">
-        <button type="button" className="daybtn" aria-expanded={panel} onClick={() => setPanel(!panel)}>
-          {day.name.split(' · ').pop()}<Icon name={panel ? 'up' : 'down'} size={15} />
+        <button type="button" className="daybtn backbtn" onClick={back}>
+          <Icon name="left" size={16} />All exercises
         </button>
-        <span className="muted">{date === today ? '' : `${fmtDate(date, { day: 'numeric', month: 'short' })} · `}{i + 1} / {exs.length}</span>
+        <span className="muted">{i + 1} / {exs.length}</span>
       </div>
       <span className="sr-only" aria-live="polite">{saved === 'saved' ? 'Saved' : ''}</span>
-      {panel && (
-        <div className="fpanel">
-          <div className="days" role="group" aria-label="Training day">
-            {program.days.map((d) => (
-              <button key={d.id} type="button" aria-pressed={d.id === day.id}
-                className={`chip${d.id === day.id ? ' on' : ''}${loggedDays.has(d.id) ? ' logged' : ''}`}
-                onClick={() => { pickDay(d.id); setPanel(false); }}>
-                <span className="chip-s">{d.short}</span>
-              </button>
-            ))}
-          </div>
-          <label className="dateline">
-            {date === today ? 'Today' : fmtDate(date, { weekday: 'short', day: 'numeric', month: 'short' })}
-            <Icon name="down" />
-            <input type="date" aria-label="Session date" value={date} max={today} onChange={(e) => pickDate(e.target.value)} />
-          </label>
-        </div>
-      )}
-      <div className="segs" aria-hidden>
-        {exs.map((e, k) => (
-          <i key={e.id} className={k === i ? 'cur' : ''}><b style={{ width: `${Math.min(1, doneCount(e) / e.sets) * 100}%` }} /></i>
-        ))}
-      </div>
+      {segs}
 
       <section
         className="focus"
@@ -210,22 +269,7 @@ function Workout({ program, day, cur, sessions, date, today, saved, update, pick
 
       <section className="upnext">
         <h2>Today&apos;s exercises</h2>
-        <ol>
-          {exs.map((e, k) => {
-            const mine = cur.sets[e.id] ?? [];
-            const n = doneCount(e);
-            const text = n ? summary(e.unit, mine) : summary(e.unit, lastFor(e)) || `${e.sets} sets`;
-            return (
-              <li key={e.id}>
-                <button type="button" className={`${k === i ? 'cur' : ''}${n >= e.sets ? ' done' : n ? ' part' : ''}`} onClick={() => go(k)}>
-                  <span className="dot" aria-hidden />
-                  <span className="nm">{e.name}</span>
-                  <span className="sm">{text}</span>
-                </button>
-              </li>
-            );
-          })}
-        </ol>
+        {rows}
       </section>
     </>
   );

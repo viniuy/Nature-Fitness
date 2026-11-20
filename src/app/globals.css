@@ -613,3 +613,13 @@ button, [role='button'], .chip, .tabbar a, .sidebar a { user-select: none; -webk
 @keyframes fx-in-prev { from { opacity: 0; transform: translateX(-28px); } }
 @media (prefers-reduced-motion: reduce) { .fx.from-next, .fx.from-prev { animation: fx-fade 160ms ease-out; } }
 @keyframes fx-fade { from { opacity: 0; } }
+
+/* ---------- list first, then one at a time ---------- */
+.daylist { border-top: 0; margin-top: 4px; padding-top: 14px; }
+.daylist li button { grid-template-columns: 14px minmax(0, 1fr) auto 16px; padding: 16px 0; }
+.daylist .nm { font-size: 16px; }
+.daylist li button > svg { color: var(--muted); }
+.backbtn { gap: 2px; margin-left: -4px; color: var(--muted); font-weight: 500; }
+.backbtn svg { color: inherit; }
+.backbtn:active { transform: scale(0.97); }
+.upnext .sm { max-width: 34vw; overflow: hidden; text-overflow: ellipsis; }
