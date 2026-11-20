@@ -35,9 +35,9 @@ export function SyncPill() {
     case 'error': cls = 'err'; text = 'Sync failed'; break;
   }
   return (
-    <Link href="/settings/" className={`syncpill ${cls}`} title="Sync settings">
+    <Link href="/settings/" className={`syncpill ${cls}`} title={text} aria-label={text}>
       <span className="dot" aria-hidden />
-      {text}
+      <span className="t">{text}</span>
     </Link>
   );
 }

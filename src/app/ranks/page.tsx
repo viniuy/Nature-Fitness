@@ -38,7 +38,7 @@ export default function RanksPage() {
   return (
     <>
       <h1>Ranks</h1>
-      <p className="lede">Your best lift for each muscle in the last 4 months, against lifters at your bodyweight.</p>
+      <p className="lede">Best lift per muscle, last 4 months, vs lifters your weight.</p>
 
       {!bw && (
         <p className="banner warn">Add a weigh-in on the <Link href="/body/">Body</Link> page first. Ranks depend on your bodyweight.</p>
@@ -48,7 +48,7 @@ export default function RanksPage() {
         <section>
           {muscles.length > 0 && (
             <div className="rankhero">
-              <RankBadge rank={rankFor(overall)} size={52} />
+              <RankBadge rank={rankFor(overall)} size={40} />
               <div>
                 <div className="eyebrow">Overall</div>
                 <div className="name">{rankFor(overall).name}</div>
@@ -89,14 +89,8 @@ export default function RanksPage() {
             {ordered.map((m) => (
               <li key={m.muscle}>
                 <button type="button" className="item" onClick={() => setSel(m.muscle)}>
-                  <span style={{ minWidth: 0 }}>
-                    <strong>{MUSCLE_NAMES[m.muscle]}</strong><br />
-                    <span className="small muted">{m.best.exercise}</span>
-                  </span>
-                  <span style={{ textAlign: 'right' }}>
-                    <span className="rankpill"><i style={{ background: m.rank.color }} />{m.rank.name}</span><br />
-                    <span className="small muted">{topText(m.percentile)}</span>
-                  </span>
+                  <span style={{ minWidth: 0 }}><strong>{MUSCLE_NAMES[m.muscle]}</strong> <span className="small muted">{m.best.exercise}</span></span>
+                  <span className="rankpill" style={{ flex: 'none' }}><i style={{ background: m.rank.color }} />{m.rank.name} <span className="muted" style={{ fontWeight: 400 }}>{Math.round(m.percentile)}%</span></span>
                 </button>
               </li>
             ))}

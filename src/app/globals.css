@@ -380,3 +380,87 @@ input[type='checkbox']:checked::after { transform: translateX(18px); }
 @media (prefers-reduced-motion: no-preference) {
   .chip, .btn { transition: background-color 0.15s, color 0.15s; }
 }
+
+/* ---------- compact pass ---------- */
+:root { --nav-h: 50px; --r: 12px; }
+body { font-size: 14.5px; }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.main { padding: calc(env(safe-area-inset-top) + 8px) 16px calc(var(--nav-h) + env(safe-area-inset-bottom) + 28px); }
+.topbar { min-height: 30px; margin-bottom: 6px; }
+.brand { font-size: 0; }
+.brand img { width: 22px; height: 22px; }
+.syncpill .t { display: none; }
+.iconbtn { width: 30px; height: 30px; }
+.iconbtn svg { width: 19px; height: 19px; }
+@media (min-width: 900px) { .syncpill .t { display: inline; } .main { padding: 24px 36px 48px; } }
+
+h1 { font-size: 24px; letter-spacing: -0.025em; margin: 0 0 10px; }
+h2 { font-size: 15px; margin: 22px 0 6px; }
+.lede { font-size: 14px; margin: -4px 0 12px; }
+.empty { padding: 12px 0; }
+
+.dayhead { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 10px; }
+.dayhead h1 { margin: 0; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dateline { flex: none; height: 28px; padding: 0 8px 0 10px; border-radius: 999px; background: var(--surface-2); font-size: 12.5px; color: var(--ink); gap: 3px; }
+.dateline svg { width: 14px; height: 14px; color: var(--muted); }
+
+.days { gap: 4px; margin: 0 -16px 6px; padding: 2px 16px; }
+.chip { height: 30px; padding: 0 12px; font-size: 13px; gap: 5px; }
+.chip.logged::after { width: 5px; height: 5px; }
+
+.warm { margin: 0; border-bottom: 1px solid var(--line); }
+.warm-head { min-height: 40px; font-size: 14.5px; font-weight: 600; }
+.warm-head .muted { display: inline-flex; align-items: center; gap: 4px; font-size: 12.5px; }
+.wurow { padding: 6px 0; font-size: 14px; }
+.wurow:last-child { padding-bottom: 10px; }
+.wudot { margin-top: 6px; }
+
+.ex { padding: 12px 0 10px; }
+.ex:first-of-type { border-top: 0; }
+.ex-head { display: flex; align-items: center; gap: 6px; min-height: 28px; }
+.ex-title { font-size: 15px; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ex-head .scheme { margin-left: auto; font-size: 12.5px; }
+.ex-head .mini { width: 28px; height: 28px; font-size: 17px; line-height: 1; background: var(--surface-2); color: var(--muted); }
+.ex-head .mini:disabled { opacity: 0.35; cursor: default; }
+.pr { padding: 1px 6px; font-size: 10px; }
+.last { margin: 1px 0 0; font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.hint { font-size: 13px; margin-top: 4px; }
+.ramp { font-size: 12px; }
+.inline-link { appearance: none; background: none; border: 0; padding: 0 0 0 8px; font-size: 12px; font-weight: 600; color: var(--accent); }
+
+.sets { gap: 4px; margin-top: 8px; }
+.setrow { grid-template-columns: 32px minmax(0, 1fr) minmax(0, 1fr); gap: 6px; }
+.setrow.nounit { grid-template-columns: 32px minmax(0, 1fr); }
+.setno { width: 32px; height: 32px; font-size: 13px; }
+.inp { position: relative; display: block; min-width: 0; }
+.setrow input { height: 36px; font-size: 15px; border-radius: 9px; padding-right: 30px; padding-left: 30px; }
+.sfx { position: absolute; right: 9px; top: 50%; transform: translateY(-50%); font-size: 10.5px; color: var(--muted); pointer-events: none; }
+.setrow.done .sfx { color: var(--accent); opacity: 0.7; }
+
+.notes { margin-top: 4px; border-top: 1px solid var(--line); }
+.notes textarea { min-height: 44px; padding: 10px 0; font-size: 14px; }
+
+.tabbar a { font-size: 0; gap: 0; }
+.tabbar svg { width: 23px; height: 23px; }
+.timer { bottom: calc(var(--nav-h) + env(safe-area-inset-bottom) + 8px); padding: 5px 5px 5px 14px; }
+.timer .t { font-size: 17px; min-width: 48px; }
+.timer button { height: 30px; padding: 0 10px; }
+
+.card { padding: 14px; margin-bottom: 10px; }
+.card-title { font-size: 15px; }
+.item { padding: 10px 0; }
+.kv { font-size: 13px; gap: 6px 14px; }
+.stats { gap: 8px; margin: 4px 0; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); }
+.stat { padding: 12px; }
+.stat .k { font-size: 12px; }
+.stat .v { font-size: 20px; margin-top: 2px; }
+.grid2 { gap: 16px; }
+.field { height: 40px; font-size: 16px; }
+.btn { height: 40px; padding: 0 16px; font-size: 14px; }
+.linkbtn { min-height: 34px; font-size: 13.5px; }
+.edit-ex > summary { padding: 10px 14px; }
+.formgrid { gap: 10px; }
+
+.bodymap { max-width: 340px; }
+.rankhero { margin-bottom: 4px; gap: 12px; }
+.rankhero .name { font-size: 20px; }
