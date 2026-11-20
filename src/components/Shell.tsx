@@ -12,6 +12,7 @@ const NAV: { href: string; label: string; icon: IconName }[] = [
   { href: '/', label: 'Today', icon: 'dumbbell' },
   { href: '/history/', label: 'History', icon: 'calendar' },
   { href: '/progress/', label: 'Progress', icon: 'chart' },
+  { href: '/ranks/', label: 'Ranks', icon: 'medal' },
   { href: '/body/', label: 'Body', icon: 'body' },
   { href: '/program/', label: 'Program', icon: 'list' },
 ];

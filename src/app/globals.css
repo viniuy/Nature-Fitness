@@ -107,14 +107,14 @@ a { color: var(--accent); }
 
 .tabbar {
   position: fixed; left: 0; right: 0; bottom: 0; z-index: 20;
-  display: grid; grid-template-columns: repeat(5, 1fr);
+  display: grid; grid-template-columns: repeat(6, 1fr);
   padding-bottom: env(safe-area-inset-bottom);
   background: var(--surface); border-top: 1px solid var(--line);
 }
 .tabbar a {
   height: var(--nav-h);
   display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;
-  font-size: 11px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase;
+  font-size: 10.5px; font-weight: 600; letter-spacing: 0.02em; text-transform: uppercase;
   color: var(--muted); text-decoration: none;
 }
 .tabbar a[aria-current='page'] { color: var(--accent); }
@@ -336,3 +336,10 @@ label.lbl { display: block; margin-bottom: 6px; font-size: 12px; letter-spacing:
 .brand { display: inline-flex; align-items: center; gap: 8px; }
 .brand img { width: 26px; height: 26px; border-radius: 6px; }
 .chip.on { background: var(--accent); }
+
+/* ---------- ranks ---------- */
+.bodymap { width: 100%; height: auto; display: block; max-width: 520px; margin: 0 auto; }
+.bodymap .bm-label { font-family: var(--f-num); font-size: 10px; letter-spacing: 0.2em; fill: var(--muted); }
+.bodymap g[role='button']:focus-visible { filter: drop-shadow(0 0 3px var(--accent)); }
+.ranklegend { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
+.ranklegend-item { display: flex; align-items: center; gap: 10px; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; }
