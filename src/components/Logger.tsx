@@ -110,44 +110,13 @@ export function Logger() {
   if (program === null) return <p className="empty">No program yet. Add one on the Program page.</p>;
   if (!day || !cur) return <p className="empty">Loading…</p>;
 
-  const loggedDays = new Set(sessions.filter((s) => s.date === date).map((s) => s.dayId));
-
-  return (
-    <>
-      <div className="dayhead">
-        <h1>{day.name.split(' · ').pop()}</h1>
-        <label className="dateline">
-          {date === today ? 'Today' : fmtDate(date, { day: 'numeric', month: 'short' })}
-          <Icon name="down" />
-          <input type="date" aria-label="Session date" value={date} max={today} onChange={(e) => pickDate(e.target.value)} />
-        </label>
-      </div>
-      <span className="sr-only" aria-live="polite">{saved === 'saved' ? 'Saved' : ''}</span>
-
-      <div className="days" role="group" aria-label="Training day">
-        {program.days.map((d) => (
-          <button
-            key={d.id} type="button" aria-pressed={d.id === day.id}
-            className={`chip${d.id === day.id ? ' on' : ''}${loggedDays.has(d.id) ? ' logged' : ''}`}
-            onClick={() => pickDay(d.id)}
-          >
-            <span className="chip-s">{d.short}</span>
-          </button>
-        ))}
-      </div>
-
-      <div className="exlist">
-        {day.exercises.map((ex) => (
-          <ExerciseRow key={ex.id} ex={ex} cur={cur} sessions={sessions} update={update} />
-        ))}
-      </div>
-    </>
-  );
+  return <Workout program={program} day={day} cur={cur} sessions={sessions} date={date} today={today} saved={saved}
+    update={update} pickDay={pickDay} pickDate={pickDate} />;
 }
 
 type Lift = { w: number | null; r: number | null };
 
-/** The heaviest (then most reps) set of a list, as the exercise's working numbers. */
+/** The heaviest (then most reps) set of a list. */
 function topOf(unit: Exercise['unit'], sets: SetEntry[] | undefined): Lift | null {
   const real = (sets ?? []).filter(hasSet);
   if (!real.length) return null;
@@ -155,120 +124,207 @@ function topOf(unit: Exercise['unit'], sets: SetEntry[] | undefined): Lift | nul
   return { w: best.w, r: best.r };
 }
 
-
-function liftText(unit: Exercise['unit'], v: Lift | null, short = false) {
-  if (!v) return 'Set';
-  const u = unit === '+kg' ? '+kg' : unit ?? '';
-  if (!unit) return `${v.r ?? '–'} reps`;
-  return `${fmtNum(v.w ?? 0)}${short ? '' : ` ${u}`} × ${v.r ?? '–'}`;
+function summary(unit: Exercise['unit'], sets: SetEntry[]): string {
+  const real = sets.filter(hasSet);
+  if (!real.length) return '';
+  if (!unit) return `${real.map((x) => x.r).join(' · ')} reps`;
+  const u = unit === '+kg' ? '+kg' : unit;
+  const same = real.every((x) => x.w === real[0].w);
+  return same
+    ? `${fmtNum(real[0].w ?? 0)} ${u} × ${real.map((x) => x.r).join(' · ')}`
+    : real.map((x) => `${fmtNum(x.w ?? 0)}×${x.r}`).join(' · ');
 }
 
-function ExerciseRow({ ex, cur, sessions, update }: {
-  ex: Exercise; cur: Session; sessions: Session[]; update: (fn: (s: Session) => Session) => void;
+function Workout({ program, day, cur, sessions, date, today, saved, update, pickDay, pickDate }: {
+  program: Program; day: Day; cur: Session; sessions: Session[]; date: string; today: string; saved: string;
+  update: (fn: (s: Session) => Session) => void; pickDay: (id: string) => void; pickDate: (v: string) => void;
 }) {
-  const [editing, setEditing] = useState(false);
-  const [sel, setSel] = useState<number | null>(null);
-  const hist = useMemo(() => historyFor(sessions, ex.id, cur.id), [sessions, ex.id, cur.id]);
-  const unit = ex.unit;
-  const mine = cur.sets[ex.id] ?? [];
-  const prevSets = hist[0]?.sets[ex.id] ?? [];
-  const now = topOf(unit, mine);
-  const prev = topOf(unit, prevSets);
-  const base = now ?? prev;
-  const n = Math.max(ex.sets, mine.length);
+  const exs = day.exercises;
+  const doneCount = (ex: Exercise) => (cur.sets[ex.id] ?? []).filter(hasSet).length;
+  const firstOpen = () => Math.max(0, exs.findIndex((ex) => doneCount(ex) < ex.sets));
+  const [idx, setIdx] = useState(firstOpen);
+  const [panel, setPanel] = useState(false);
+  const touch = useRef<number | null>(null);
+  useEffect(() => { setIdx(firstOpen()); }, [day.id, date]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // What each set shows: today's numbers once logged, otherwise last time's for that set.
-  const shown = (i: number): Lift | null => {
-    const m = mine[i];
-    if (m && hasSet(m)) return { w: m.w, r: m.r };
-    const p = prevSets[i];
-    if (p && hasSet(p)) return { w: p.w, r: p.r };
-    return base;
-  };
-  const isLogged = (i: number) => !!mine[i] && hasSet(mine[i]);
-  const loggedCount = Array.from({ length: n }, (_, i) => i).filter(isLogged).length;
-  const logged = loggedCount > 0;
+  const i = Math.min(idx, exs.length - 1);
+  const ex = exs[i];
+  const go = (n: number) => { setIdx(Math.max(0, Math.min(exs.length - 1, n))); window.scrollTo({ top: 0, behavior: 'smooth' }); };
+  const loggedDays = new Set(sessions.filter((s) => s.date === date).map((s) => s.dayId));
+  const lastFor = (e: Exercise) => historyFor(sessions, e.id, cur.id)[0]?.sets[e.id] ?? [];
 
-  const prevBest = hist.reduce((m, h) => Math.max(m, ...h.sets[ex.id].filter(hasSet).map((s) => setScore(unit, s))), -1);
-  const isPr = !!now && hist.length > 0 && setScore(unit, { w: now.w, r: now.r, done: true }) > prevBest;
-
-  const write = (fn: (arr: SetEntry[]) => SetEntry[]) => update((s) => {
-    const sets = { ...s.sets };
-    const arr = Array.from({ length: n }, (_, i) => s.sets[ex.id]?.[i] ?? { w: null, r: null, done: false });
-    const out = fn(arr);
-    if (out.some(hasSet)) sets[ex.id] = out; else delete sets[ex.id];
-    return { ...s, sets };
-  });
-  const put = (v: Lift | null): SetEntry => (v ? { w: unit ? v.w : null, r: v.r, done: true } : { w: null, r: null, done: false });
-  const bumped = (v: Lift | null, dr: number, dw: number): Lift => ({
-    w: unit ? Math.round(((v?.w ?? 0) + dw) * 100) / 100 : null,
-    r: (v?.r ?? 0) + dr,
-  });
-  const step = ex.step ?? defaultStep(ex.name, unit);
-
-  // Whole exercise: every set moves by the same amount from what it shows.
-  const allBump = (dr: number, dw: number) => write((arr) => arr.map((_, i) => put(bumped(shown(i), dr, dw))));
-  const allSame = () => write((arr) => arr.map((_, i) => put(shown(i))));
-  const setAll = (v: Lift | null) => write((arr) => arr.map(() => put(v)));
-  // One set.
-  const oneBump = (i: number, dr: number, dw: number) => write((arr) => arr.map((x, j) => (j === i ? put(bumped(shown(i), dr, dw)) : x)));
-  const oneSet = (i: number, v: Lift | null) => write((arr) => arr.map((x, j) => (j === i ? put(v) : x)));
-  // Tap a set: log it if it isn't yet, and pick it so the buttons move only that set. Tap it again to go back to all sets.
-  const tapChip = (i: number) => {
-    setEditing(false);
-    if (sel === i) { setSel(null); return; }
-    if (!isLogged(i)) oneSet(i, shown(i));
-    setSel(i);
-  };
-  const plus = (dr: number, dw: number) => (sel == null ? allBump(dr, dw) : oneBump(sel, dr, dw));
-
-  const unitText = unit === '+kg' ? '+kg' : unit ?? '';
-  const ws = Array.from({ length: n }, (_, i) => shown(i)?.w ?? null);
-  const oneWeight = ws.every((w) => w === ws[0]);
-  const editTarget = sel ?? null;
-  const editVal = editTarget != null ? shown(editTarget) : now ?? base;
-  const commit = (v: Lift | null) => (editTarget != null ? oneSet(editTarget, v) : setAll(v));
+  if (!ex) return <p className="empty">This day has no exercises yet. Add some on the Program page.</p>;
 
   return (
-    <section className={`exrow${logged ? ' logged' : ''}`} id={`ex-${ex.id}`}>
-      <div className="exrow-name">
-        <span>{ex.name}</span>
-        {isPr && <span className="pr">PR</span>}
-      </div>
-      <div className="exline">
-        <button type="button" className="wlabel" onClick={() => setEditing(!editing)} aria-label="Type numbers">
-          {unit ? (oneWeight ? `${fmtNum(ws[0] ?? 0)} ${unitText}` : unitText) : 'reps'}
+    <>
+      <div className="ftop">
+        <button type="button" className="daybtn" aria-expanded={panel} onClick={() => setPanel(!panel)}>
+          {day.name.split(' · ').pop()}<Icon name={panel ? 'up' : 'down'} size={15} />
         </button>
-        <div className="chips" role="group" aria-label="Sets">
-          {Array.from({ length: n }, (_, i) => {
-            const v = shown(i);
-            return (
-              <button
-                key={i} type="button"
-                className={`setchip${isLogged(i) ? ' on' : ''}${sel === i ? ' sel' : ''}`}
-                aria-pressed={sel === i}
-                aria-label={`Set ${i + 1}: ${liftText(unit, v)}${isLogged(i) ? ', done' : ''}`}
-                onClick={() => tapChip(i)}
-              >
-                {unit && !oneWeight ? `${fmtNum(v?.w ?? 0)}×${v?.r ?? '–'}` : v?.r ?? '–'}
+        <span className="muted">{date === today ? '' : `${fmtDate(date, { day: 'numeric', month: 'short' })} · `}{i + 1} / {exs.length}</span>
+      </div>
+      <span className="sr-only" aria-live="polite">{saved === 'saved' ? 'Saved' : ''}</span>
+      {panel && (
+        <div className="fpanel">
+          <div className="days" role="group" aria-label="Training day">
+            {program.days.map((d) => (
+              <button key={d.id} type="button" aria-pressed={d.id === day.id}
+                className={`chip${d.id === day.id ? ' on' : ''}${loggedDays.has(d.id) ? ' logged' : ''}`}
+                onClick={() => { pickDay(d.id); setPanel(false); }}>
+                <span className="chip-s">{d.short}</span>
               </button>
-            );
-          })}
+            ))}
+          </div>
+          <label className="dateline">
+            {date === today ? 'Today' : fmtDate(date, { weekday: 'short', day: 'numeric', month: 'short' })}
+            <Icon name="down" />
+            <input type="date" aria-label="Session date" value={date} max={today} onChange={(e) => pickDate(e.target.value)} />
+          </label>
         </div>
-        <button type="button" className="bump" onClick={() => plus(1, 0)}>+ rep</button>
-        {unit && <button type="button" className="bump" aria-label={`Add ${fmtNum(step)} ${unitText}`} onClick={() => plus(0, step)}>+{fmtNum(step)}</button>}
+      )}
+      <div className="segs" aria-hidden>
+        {exs.map((e, k) => (
+          <i key={e.id} className={k === i ? 'cur' : ''}><b style={{ width: `${Math.min(1, doneCount(e) / e.sets) * 100}%` }} /></i>
+        ))}
       </div>
 
+      <section
+        className="focus"
+        onTouchStart={(e) => { touch.current = e.touches[0].clientX; }}
+        onTouchEnd={(e) => {
+          if (touch.current == null) return;
+          const dx = e.changedTouches[0].clientX - touch.current;
+          touch.current = null;
+          if (Math.abs(dx) > 70) go(i + (dx < 0 ? 1 : -1));
+        }}
+      >
+        <ExerciseFocus key={ex.id + cur.id} ex={ex} cur={cur} sessions={sessions} update={update} />
+        <div className="fnav">
+          <button type="button" disabled={i === 0} onClick={() => go(i - 1)}>{i > 0 ? `‹ ${exs[i - 1].name}` : ''}</button>
+          <button type="button" className={doneCount(ex) >= ex.sets ? 'ready' : ''} disabled={i === exs.length - 1} onClick={() => go(i + 1)}>
+            {i < exs.length - 1 ? <>Next: <b>{exs[i + 1].name}</b> ›</> : 'Last one'}
+          </button>
+        </div>
+      </section>
+
+      <section className="upnext">
+        <h2>Today&apos;s exercises</h2>
+        <ol>
+          {exs.map((e, k) => {
+            const mine = cur.sets[e.id] ?? [];
+            const n = doneCount(e);
+            const text = n ? summary(e.unit, mine) : summary(e.unit, lastFor(e)) || `${e.sets} sets`;
+            return (
+              <li key={e.id}>
+                <button type="button" className={`${k === i ? 'cur' : ''}${n >= e.sets ? ' done' : n ? ' part' : ''}`} onClick={() => go(k)}>
+                  <span className="dot" aria-hidden />
+                  <span className="nm">{e.name}</span>
+                  <span className="sm">{text}</span>
+                </button>
+              </li>
+            );
+          })}
+        </ol>
+      </section>
+    </>
+  );
+}
+
+function ExerciseFocus({ ex, cur, sessions, update }: {
+  ex: Exercise; cur: Session; sessions: Session[]; update: (fn: (s: Session) => Session) => void;
+}) {
+  const unit = ex.unit;
+  const hist = useMemo(() => historyFor(sessions, ex.id, cur.id), [sessions, ex.id, cur.id]);
+  const mine = cur.sets[ex.id] ?? [];
+  const prevSets = hist[0]?.sets[ex.id] ?? [];
+  const n = Math.max(ex.sets, mine.length);
+  const isLogged = (k: number) => !!mine[k] && hasSet(mine[k]);
+  const firstOpen = () => { for (let k = 0; k < n; k++) if (!isLogged(k)) return k; return n - 1; };
+  const [at, setAt] = useState(firstOpen);
+  const [drafts, setDrafts] = useState<Record<number, Lift>>({});
+  const [editing, setEditing] = useState(false);
+  const step = ex.step ?? defaultStep(ex.name, unit);
+  const unitText = unit === '+kg' ? '+kg' : unit ?? '';
+
+  // A set shows: what was logged, else your adjustment, else the set before it today, else last time's set.
+  const shown = (k: number): Lift | null => {
+    if (isLogged(k)) return { w: mine[k].w, r: mine[k].r };
+    if (drafts[k]) return drafts[k];
+    for (let j = k - 1; j >= 0; j--) if (isLogged(j)) return { w: mine[j].w, r: prevSets[k]?.r ?? mine[j].r };
+    const p = prevSets[k] ?? prevSets[prevSets.length - 1];
+    if (p && hasSet(p)) return { w: p.w, r: p.r };
+    return { w: unit ? 0 : null, r: 8 };
+  };
+
+  const write = (k: number, v: Lift | null) => update((s) => {
+    const arr = Array.from({ length: n }, (_, j) => s.sets[ex.id]?.[j] ?? { w: null, r: null, done: false });
+    arr[k] = v ? { w: unit ? v.w : null, r: v.r, done: true } : { w: null, r: null, done: false };
+    const sets = { ...s.sets };
+    if (arr.some(hasSet)) sets[ex.id] = arr; else delete sets[ex.id];
+    return { ...s, sets };
+  });
+
+  const v = shown(at);
+  const bump = (dr: number, dw: number) => {
+    const next = { w: unit ? Math.round(((v?.w ?? 0) + dw) * 100) / 100 : null, r: Math.max(0, (v?.r ?? 0) + dr) };
+    if (isLogged(at)) write(at, next); else setDrafts({ ...drafts, [at]: next });
+  };
+  const tapSet = (k: number) => {
+    setEditing(false);
+    if (k !== at) { setAt(k); return; }
+    if (isLogged(k)) { setEditing(true); return; }
+    write(k, shown(k));
+    const { [k]: _, ...rest } = drafts; // eslint-disable-line @typescript-eslint/no-unused-vars
+    setDrafts(rest);
+    for (let j = k + 1; j < n; j++) if (!isLogged(j)) { setAt(j); return; }
+  };
+
+  const prevBest = hist.reduce((m, h) => Math.max(m, ...h.sets[ex.id].filter(hasSet).map((x) => setScore(unit, x))), -1);
+  const now = topOf(unit, mine);
+  const isPr = !!now && hist.length > 0 && setScore(unit, { ...now, done: true }) > prevBest;
+  const lastText = summary(unit, prevSets);
+
+  return (
+    <div className="fx">
+      <div className="fx-head">
+        <h1 className="fx-name">{ex.name}{isPr && <span className="pr">PR</span>}</h1>
+        <p className="fx-last">{lastText ? `Last time ${lastText}` : 'First time'}</p>
+      </div>
+
+      <button type="button" className="fx-big" onClick={() => setEditing(!editing)} aria-label="Type the numbers">
+        {unit ? <>{fmtNum(v?.w ?? 0)}<small>{unitText}</small></> : <>{v?.r ?? 0}<small>reps</small></>}
+      </button>
+
+      <div className="fx-sets" role="group" aria-label="Sets">
+        {Array.from({ length: n }, (_, k) => {
+          const sv = shown(k);
+          return (
+            <button key={k} type="button"
+              className={`fx-set${isLogged(k) ? ' on' : ''}${k === at ? ' at' : ''}`}
+              aria-label={`Set ${k + 1}: ${unit ? `${fmtNum(sv?.w ?? 0)} ${unitText} × ` : ''}${sv?.r ?? 0}${isLogged(k) ? ', done' : k === at ? ', tap to log' : ''}`}
+              onClick={() => tapSet(k)}>
+              {unit && sv?.w !== v?.w && isLogged(k) ? <><span>{sv?.r}</span><em>{fmtNum(sv?.w ?? 0)}</em></> : sv?.r}
+            </button>
+          );
+        })}
+      </div>
+      <p className="fx-hint">{isLogged(at) ? 'Tap the weight to type a number' : `Tap set ${at + 1} when you finish it`}</p>
+
       {editing && (
-        <div className="exrow-edit">
+        <div className="exrow-edit fx-edit">
           {unit && (
-            <label className="inp"><input inputMode="decimal" aria-label={unitText} defaultValue={editVal?.w ?? ''} onChange={(e) => commit({ w: parseNum(e.target.value), r: (editTarget != null ? shown(editTarget) : now ?? base)?.r ?? null })} /><span className="sfx">{unitText}</span></label>
+            <label className="inp"><input inputMode="decimal" aria-label={unitText} defaultValue={v?.w ?? ''} onChange={(e) => { const x = { w: parseNum(e.target.value), r: v?.r ?? null }; if (isLogged(at)) write(at, x); else setDrafts({ ...drafts, [at]: x }); }} /><span className="sfx">{unitText}</span></label>
           )}
-          <label className="inp"><input inputMode="numeric" aria-label="Reps" defaultValue={editVal?.r ?? ''} onChange={(e) => { const x = parseNum(e.target.value); commit({ w: (editTarget != null ? shown(editTarget) : now ?? base)?.w ?? null, r: x == null ? null : Math.round(x) }); }} /><span className="sfx">reps</span></label>
-          <button type="button" className="linkbtn quiet" onClick={() => { commit(null); setEditing(false); }}>Clear</button>
+          <label className="inp"><input inputMode="numeric" aria-label="Reps" defaultValue={v?.r ?? ''} onChange={(e) => { const r = parseNum(e.target.value); const x = { w: v?.w ?? null, r: r == null ? null : Math.round(r) }; if (isLogged(at)) write(at, x); else setDrafts({ ...drafts, [at]: x }); }} /><span className="sfx">reps</span></label>
+          {isLogged(at) && <button type="button" className="linkbtn quiet" onClick={() => { write(at, null); setEditing(false); }}>Undo</button>}
           <button type="button" className="linkbtn" onClick={() => setEditing(false)}>Done</button>
         </div>
       )}
-    </section>
+
+      <div className="fx-btns">
+        <button type="button" onClick={() => bump(1, 0)}>+1 rep</button>
+        {unit && <button type="button" onClick={() => bump(0, step)}>+{fmtNum(step)} {unitText}</button>}
+      </div>
+    </div>
   );
 }
