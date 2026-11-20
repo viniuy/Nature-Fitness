@@ -488,3 +488,14 @@ h2 { font-size: 15px; margin: 22px 0 6px; }
 .exrow-edit { display: grid; grid-template-columns: 1fr 1fr auto auto; gap: 6px 12px; align-items: center; margin-top: 6px; }
 .exrow-edit input { width: 100%; height: 36px; border: 1px solid transparent; border-radius: 9px; background: var(--surface-2); text-align: center; font-weight: 600; font-size: 16px; padding: 0 30px; }
 .exrow-edit input:focus { outline: none; border-color: var(--accent); background: var(--surface); }
+
+/* ---------- per-set view ---------- */
+.exrow-name { appearance: none; background: none; border: 0; padding: 0; width: 100%; text-align: left; color: inherit; }
+.exrow-sets { margin-left: auto; flex: none; display: inline-flex; align-items: center; gap: 3px; font-size: 12px; font-weight: 500; color: var(--muted); letter-spacing: 0; }
+.exsets { display: grid; gap: 4px; margin-top: 8px; }
+.exset { display: grid; grid-template-columns: 18px minmax(0, 1fr) auto auto; gap: 6px; align-items: center; }
+.exset-n { font-size: 12px; font-weight: 600; color: var(--muted); text-align: center; }
+.exset .val, .exset .bump { height: 36px; font-size: 14.5px; }
+.exset .bump { font-size: 13px; padding: 0 12px; }
+.exset.logged .val { background: var(--accent-soft); color: var(--accent); }
+.exset.logged .exset-n { color: var(--accent); }
