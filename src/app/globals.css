@@ -686,3 +686,15 @@ button, [role='button'], .chip, .tabbar a, .sidebar a { user-select: none; -webk
 .bodymap .bm-skin2 { fill: var(--surface); stroke: color-mix(in srgb, var(--ink) 55%, transparent); stroke-width: 1; stroke-linejoin: round; pointer-events: none; }
 .bodymap .bm-sel { fill: none; stroke: var(--ink); stroke-width: 2.4; stroke-linejoin: round; pointer-events: none; }
 .bodymap .bm-head { fill: var(--surface); stroke: color-mix(in srgb, var(--ink) 70%, transparent); stroke-width: 1.3; }
+
+/* ---------- grey anatomy style: soft grey body, lighter muscles, body-grey separations ---------- */
+.bodymap { --bm-body: #bdbdba; --bm-muscle: #e9e9e6; --bm-edge: #a9a9a6; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme='light']) .bodymap { --bm-body: #3b3b38; --bm-muscle: #5c5c58; --bm-edge: #2c2c2a; } }
+:root[data-theme='dark'] .bodymap { --bm-body: #3b3b38; --bm-muscle: #5c5c58; --bm-edge: #2c2c2a; }
+.bodymap .bm-body { fill: var(--bm-body); }
+.bodymap .bm-m { fill: var(--bm-muscle); stroke: var(--bm-body); stroke-width: 2.2; }
+.bodymap .bm-skin2 { fill: var(--bm-body); stroke: var(--bm-body); stroke-width: 2.2; }
+.bodymap .bm-detail { stroke: var(--bm-body); stroke-width: 1.7; }
+.bodymap .bm-line { stroke: var(--bm-edge); stroke-width: 1.2; }
+.bodymap .bm-head { fill: var(--bm-body); stroke: var(--bm-edge); stroke-width: 1.2; }
+.bodymap .bm-sel { stroke: var(--ink); stroke-width: 2.2; }

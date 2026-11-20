@@ -30,13 +30,13 @@ const FOREARM = 'M5 128 L60 128 Q53 158 50 170 Q46 184 42.5 198 Q38 201 33 196 L
 const UPPER_ARM = 'M10 96 L64 96 Q59 110 59 122 Q58.5 136 55 148 Q48 151 41 145 L10 145 Z';
 const DELT = 'M76 48 L20 48 L20 108 L41 110 Q46 116 50 119 Q56 111 62 101 Q64 86 69 74 Q72 64 77 57 Z';
 const SIDE_DELT = 'M64 58 Q53 66 49.5 80 Q47.5 96 49 118 Q45 114 41 110 L10 108 L10 48 Z';
-const KNEE = 'M57 276 Q66 280 76 279 Q87 286 100 277 L100 296 Q86 300 75 294 Q64 296 57 294 Z';
+const KNEE = 'M75 279 Q81 274 88 276 Q95 280 94.5 289 Q91 297 83 297 Q76 295 75 287 Z';
 const FOOT = 'M57 358 Q68 364 78 362 Q88 368 100 362 L100 400 L57 400 Z';
 
 const FRONT: Layer[] = [
   { m: 'obliques', d: 'M50 96 L100 96 L100 216 L57 216 L57 200 L50 200 Z' },
   { m: 'abs', d: 'M87.5 104 L100 104 L100 204 Q93 202 90 192 Q87 170 87.5 140 Z' },
-  { m: 'chest', d: 'M100 56 L50 56 L50 92 Q64 104 80 107 Q93 108 100 104 Z' },
+  { m: 'chest', d: 'M100 58 L50 58 L50 90 Q62 100 78 103 Q92 104 100 99 Z' },
   { m: 'traps', d: 'M100 30 L50 30 L50 62 Q70 62 80 60 Q88 58 100 57 Z' },
   { d: 'M92 30 L100 30 L100 52 L91 52 Z' }, // neck
   { d: HAND },
@@ -44,10 +44,10 @@ const FRONT: Layer[] = [
   { m: 'biceps', d: UPPER_ARM },
   { m: 'frontDelts', d: DELT },
   { m: 'sideDelts', d: SIDE_DELT },
-  { m: 'quads', d: 'M57 182 L73 184 Q86 196 96 210 L100 214 L100 290 L57 290 Z' },
+  { m: 'quads', d: 'M57 182 L73 184 Q86 196 96 210 L100 214 L100 282 Q88 276 76 284 Q66 286 57 282 Z' },
   { m: 'adductors', d: 'M89 197 Q97 203 100 208 L100 262 Q95 246 93 230 Q91 210 89 197 Z' },
+  { m: 'calves', d: 'M57 284 Q66 288 76 286 Q88 280 100 286 L100 370 L57 370 Z' },
   { d: KNEE },
-  { m: 'calves', d: 'M57 292 Q64 296 75 292 Q86 298 100 294 L100 370 L57 370 Z' },
   { d: FOOT },
 ];
 const FRONT_LINES = [
@@ -73,8 +73,7 @@ const BACK: Layer[] = [
   { m: 'rearDelts', d: SIDE_DELT },
   { m: 'hamstrings', d: 'M57 214 L100 214 L100 292 L57 292 Z' },
   { m: 'glutes', d: 'M57 182 Q72 182 100 190 L100 226 Q86 232 72 226 Q64 223 57 222 Z' },
-  { d: 'M57 284 Q66 288 76 287 Q87 291 100 285 L100 293 Q86 297 76 294 Q66 295 57 293 Z' }, // back of knee
-  { m: 'calves', d: 'M57 290 Q66 294 76 291 Q86 296 100 292 L100 370 L57 370 Z' },
+    { m: 'calves', d: 'M57 290 Q66 294 76 291 Q86 296 100 292 L100 370 L57 370 Z' },
   { d: 'M57 342 Q70 352 84 352 Q93 352 100 344 L100 400 L57 400 Z' }, // achilles and foot
 ];
 const BACK_LINES = [
@@ -82,6 +81,7 @@ const BACK_LINES = [
   'M44 158 Q47 172 46 188', // forearm split
   'M84 232 Q85 258 86 282', // hamstring split
   'M84 300 Q86 322 85 346', // calf heads
+  'M66 289 Q78 293 96 289', // back of knee
   'M100 118 L100 200', // spine
 ];
 
@@ -114,6 +114,7 @@ export function BodyMap({ scores, selected, onSelect }: Props) {
           <path d={OUTLINE + ' L100 42 Z'} transform={MIRROR} />
         </clipPath>
         <g clipPath={`url(#${id})`}>
+          <rect className="bm-body" x="0" y="0" width="200" height="400" />
           {layers.map((l, k) => <Region key={k} layer={l} />)}
           {lines.map((l, k) => <g key={k} className="bm-detail"><path d={l} /><path d={l} transform={MIRROR} /></g>)}
           {sel.map((l, k) => <g key={k} className="bm-sel"><path d={l.d} /><path d={l.d} transform={MIRROR} /></g>)}
