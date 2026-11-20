@@ -258,7 +258,8 @@ function Workout({ program, day, cur, sessions, date, today, saved, update, pick
           if (Math.abs(dx) > 70) go(i + (dx < 0 ? 1 : -1));
         }}
       >
-        <ExerciseFocus key={ex.id + cur.id} ex={ex} cur={cur} sessions={sessions} update={update} motion={dir} />
+        <ExerciseFocus key={ex.id + cur.id} ex={ex} cur={cur} sessions={sessions} update={update} motion={dir}
+          onNext={() => (i < exs.length - 1 ? go(i + 1) : back())} nextLabel={i < exs.length - 1 ? `Next: ${exs[i + 1].name}` : 'Back to the list'} />
         <div className="fnav">
           <button type="button" disabled={i === 0} onClick={() => go(i - 1)}>{i > 0 ? `‹ ${exs[i - 1].name}` : ''}</button>
           <button type="button" className={doneCount(ex) >= ex.sets ? 'ready' : ''} disabled={i === exs.length - 1} onClick={() => go(i + 1)}>
@@ -275,8 +276,9 @@ function Workout({ program, day, cur, sessions, date, today, saved, update, pick
   );
 }
 
-function ExerciseFocus({ ex, cur, sessions, update, motion }: {
+function ExerciseFocus({ ex, cur, sessions, update, motion, onNext, nextLabel }: {
   ex: Exercise; cur: Session; sessions: Session[]; update: (fn: (s: Session) => Session) => void; motion: string;
+  onNext: () => void; nextLabel: string;
 }) {
   const unit = ex.unit;
   const hist = useMemo(() => historyFor(sessions, ex.id, cur.id), [sessions, ex.id, cur.id]);
@@ -314,15 +316,19 @@ function ExerciseFocus({ ex, cur, sessions, update, motion }: {
     const next = { w: unit ? Math.max(0, Math.round(((v?.w ?? 0) + dw) * 100) / 100) : null, r: Math.max(0, (v?.r ?? 0) + dr) };
     if (isLogged(at)) write(at, next); else setDrafts({ ...drafts, [at]: next });
   };
-  const tapSet = (k: number) => {
+  const tapSet = (k: number) => { setEditing(false); setAt(k); };
+  const nextOpen = (from: number) => { for (let j = from + 1; j < n; j++) if (!isLogged(j)) return j; for (let j = 0; j < from; j++) if (!isLogged(j)) return j; return -1; };
+  const doneSet = () => {
     setEditing(false);
-    if (k !== at) { setAt(k); return; }
-    if (isLogged(k)) { setEditing(true); return; }
-    write(k, shown(k));
-    const { [k]: _, ...rest } = drafts; // eslint-disable-line @typescript-eslint/no-unused-vars
-    setDrafts(rest);
-    for (let j = k + 1; j < n; j++) if (!isLogged(j)) { setAt(j); return; }
+    if (!isLogged(at)) {
+      write(at, v);
+      const { [at]: _, ...rest } = drafts; // eslint-disable-line @typescript-eslint/no-unused-vars
+      setDrafts(rest);
+    }
+    const j = nextOpen(at);
+    if (j >= 0) setAt(j); else if (isLogged(at)) onNext();
   };
+  const allDone = Array.from({ length: n }, (_, k) => isLogged(k)).every(Boolean);
 
   const prevBest = hist.reduce((m, h) => Math.max(m, ...h.sets[ex.id].filter(hasSet).map((x) => setScore(unit, x))), -1);
   const now = topOf(unit, mine);
@@ -336,24 +342,39 @@ function ExerciseFocus({ ex, cur, sessions, update, motion }: {
         <p className="fx-last">{lastText ? `Last time ${lastText}` : 'First time'}</p>
       </div>
 
-      <button type="button" className="fx-big" onClick={() => setEditing(!editing)} aria-label="Type the numbers">
-        {unit ? <>{fmtNum(v?.w ?? 0)}<small>{unitText}</small></> : <>{v?.r ?? 0}<small>reps</small></>}
-      </button>
-
       <div className="fx-sets" role="group" aria-label="Sets">
         {Array.from({ length: n }, (_, k) => {
           const sv = shown(k);
           return (
             <button key={k} type="button"
               className={`fx-set${isLogged(k) ? ' on' : ''}${k === at ? ' at' : ''}`}
-              aria-label={`Set ${k + 1}: ${unit ? `${fmtNum(sv?.w ?? 0)} ${unitText} × ` : ''}${sv?.r ?? 0}${isLogged(k) ? ', done' : k === at ? ', tap to log' : ''}`}
+              aria-label={`Set ${k + 1}: ${unit ? `${fmtNum(sv?.w ?? 0)} ${unitText} × ` : ''}${sv?.r ?? 0}${isLogged(k) ? ', done' : ''}`}
               onClick={() => tapSet(k)}>
-              {unit && sv?.w !== v?.w && isLogged(k) ? <><span>{sv?.r}</span><em>{fmtNum(sv?.w ?? 0)}</em></> : sv?.r}
+              {isLogged(k) ? sv?.r : k + 1}
             </button>
           );
         })}
       </div>
-      <p className="fx-hint">{isLogged(at) ? 'Tap the weight to type a number' : `Tap set ${at + 1} when you finish it`}</p>
+      <p className="fx-setno">Set {at + 1} of {n}{isLogged(at) && <> · done <button type="button" className="linkbtn quiet" onClick={() => write(at, null)}>Undo</button></>}</p>
+
+      <div className="dials">
+        {unit && (
+          <div className="dial" role="group" aria-label="Weight">
+            <button type="button" aria-label={`Minus ${fmtNum(step)} ${unitText}`} onClick={() => bump(0, -step)}>−</button>
+            <button type="button" className="dial-v" onClick={() => setEditing(!editing)} aria-label="Type the weight">
+              {fmtNum(v?.w ?? 0)}<small>{unitText}</small>
+            </button>
+            <button type="button" aria-label={`Plus ${fmtNum(step)} ${unitText}`} onClick={() => bump(0, step)}>+</button>
+          </div>
+        )}
+        <div className="dial" role="group" aria-label="Reps">
+          <button type="button" aria-label="Minus 1 rep" onClick={() => bump(-1, 0)}>−</button>
+          <button type="button" className="dial-v" onClick={() => setEditing(!editing)} aria-label="Type the reps">
+            {v?.r ?? 0}<small>reps</small>
+          </button>
+          <button type="button" aria-label="Plus 1 rep" onClick={() => bump(1, 0)}>+</button>
+        </div>
+      </div>
 
       {editing && (
         <div className="exrow-edit fx-edit">
@@ -361,25 +382,13 @@ function ExerciseFocus({ ex, cur, sessions, update, motion }: {
             <label className="inp"><input inputMode="decimal" aria-label={unitText} defaultValue={v?.w ?? ''} onChange={(e) => { const x = { w: parseNum(e.target.value), r: v?.r ?? null }; if (isLogged(at)) write(at, x); else setDrafts({ ...drafts, [at]: x }); }} /><span className="sfx">{unitText}</span></label>
           )}
           <label className="inp"><input inputMode="numeric" aria-label="Reps" defaultValue={v?.r ?? ''} onChange={(e) => { const r = parseNum(e.target.value); const x = { w: v?.w ?? null, r: r == null ? null : Math.round(r) }; if (isLogged(at)) write(at, x); else setDrafts({ ...drafts, [at]: x }); }} /><span className="sfx">reps</span></label>
-          {isLogged(at) && <button type="button" className="linkbtn quiet" onClick={() => { write(at, null); setEditing(false); }}>Undo</button>}
           <button type="button" className="linkbtn" onClick={() => setEditing(false)}>Done</button>
         </div>
       )}
 
-      <div className="fx-btns">
-        <div className="stepper" role="group" aria-label="Reps">
-          <button type="button" aria-label="Minus 1 rep" onClick={() => bump(-1, 0)}>−</button>
-          <span>1 rep</span>
-          <button type="button" aria-label="Plus 1 rep" onClick={() => bump(1, 0)}>+</button>
-        </div>
-        {unit && (
-          <div className="stepper" role="group" aria-label="Weight">
-            <button type="button" aria-label={`Minus ${fmtNum(step)} ${unitText}`} onClick={() => bump(0, -step)}>−</button>
-            <span>{fmtNum(step)} {unitText}</span>
-            <button type="button" aria-label={`Plus ${fmtNum(step)} ${unitText}`} onClick={() => bump(0, step)}>+</button>
-          </div>
-        )}
-      </div>
+      <button type="button" className={`donebtn${allDone ? ' next' : ''}`} onClick={doneSet}>
+        {!isLogged(at) ? 'Done set' : nextOpen(at) >= 0 ? `Go to set ${nextOpen(at) + 1}` : nextLabel}
+      </button>
     </div>
   );
 }
