@@ -168,8 +168,7 @@ function ExerciseRow({ ex, cur, sessions, update }: {
   ex: Exercise; cur: Session; sessions: Session[]; update: (fn: (s: Session) => Session) => void;
 }) {
   const [editing, setEditing] = useState(false);
-  const [open, setOpen] = useState(false);
-  const [editSet, setEditSet] = useState<number | null>(null);
+  const [sel, setSel] = useState<number | null>(null);
   const hist = useMemo(() => historyFor(sessions, ex.id, cur.id), [sessions, ex.id, cur.id]);
   const unit = ex.unit;
   const mine = cur.sets[ex.id] ?? [];
@@ -215,77 +214,59 @@ function ExerciseRow({ ex, cur, sessions, update }: {
   // One set.
   const oneBump = (i: number, dr: number, dw: number) => write((arr) => arr.map((x, j) => (j === i ? put(bumped(shown(i), dr, dw)) : x)));
   const oneSet = (i: number, v: Lift | null) => write((arr) => arr.map((x, j) => (j === i ? put(v) : x)));
-  const oneTap = (i: number) => (isLogged(i) ? setEditSet(editSet === i ? null : i) : oneSet(i, shown(i)));
+  // Tap a set: log it if it isn't yet, and pick it so the buttons move only that set. Tap it again to go back to all sets.
+  const tapChip = (i: number) => {
+    setEditing(false);
+    if (sel === i) { setSel(null); return; }
+    if (!isLogged(i)) oneSet(i, shown(i));
+    setSel(i);
+  };
+  const plus = (dr: number, dw: number) => (sel == null ? allBump(dr, dw) : oneBump(sel, dr, dw));
 
-  // Summary: one weight with each set's reps, or the top set when weights differ.
-  const done = Array.from({ length: n }, (_, i) => i).filter(isLogged).map((i) => mine[i]);
-  const sameW = done.length > 0 && done.every((x) => x.w === done[0].w);
-  const reps = done.map((x) => x.r).join(', ');
-  const allSameReps = done.every((x) => x.r === done[0]?.r);
   const unitText = unit === '+kg' ? '+kg' : unit ?? '';
-  const summary = !logged
-    ? liftText(unit, base)
-    : sameW && !allSameReps
-      ? (unit ? `${fmtNum(done[0].w ?? 0)} ${unitText} × ${reps}` : `${reps} reps`)
-      : liftText(unit, now);
+  const ws = Array.from({ length: n }, (_, i) => shown(i)?.w ?? null);
+  const oneWeight = ws.every((w) => w === ws[0]);
+  const editTarget = sel ?? null;
+  const editVal = editTarget != null ? shown(editTarget) : now ?? base;
+  const commit = (v: Lift | null) => (editTarget != null ? oneSet(editTarget, v) : setAll(v));
 
   return (
-    <section className={`exrow${logged ? ' logged' : ''}${open ? ' open' : ''}`} id={`ex-${ex.id}`}>
-      <button type="button" className="exrow-name" aria-expanded={open} onClick={() => setOpen(!open)}>
+    <section className={`exrow${logged ? ' logged' : ''}`} id={`ex-${ex.id}`}>
+      <div className="exrow-name">
         <span>{ex.name}</span>
         {isPr && <span className="pr">PR</span>}
-        <span className="exrow-sets">{logged && loggedCount < n ? `${loggedCount}/${n}` : `${n} sets`}<Icon name={open ? 'up' : 'down'} size={14} /></span>
-      </button>
-
-      {!open && (
-        <div className="exrow-ctl">
-          <button type="button" className="val" onClick={() => (logged ? setEditing(!editing) : allSame())}
-            aria-label={logged ? `Edit ${summary}` : base ? `Log ${summary}, same as last time` : 'Enter numbers'}>
-            {summary}
-          </button>
-          <button type="button" className="bump" onClick={() => allBump(1, 0)}>+ rep</button>
-          {unit && <button type="button" className="bump" onClick={() => allBump(0, step)}>+ {unit === 'cm' ? 'cm' : 'weight'}</button>}
-        </div>
-      )}
-
-      {open && (
-        <div className="exsets">
+      </div>
+      <div className="exline">
+        <button type="button" className="wlabel" onClick={() => setEditing(!editing)} aria-label="Type numbers">
+          {unit ? (oneWeight ? `${fmtNum(ws[0] ?? 0)} ${unitText}` : unitText) : 'reps'}
+        </button>
+        <div className="chips" role="group" aria-label="Sets">
           {Array.from({ length: n }, (_, i) => {
             const v = shown(i);
             return (
-              <div key={i}>
-                <div className={`exset${isLogged(i) ? ' logged' : ''}`}>
-                  <span className="exset-n">{i + 1}</span>
-                  <button type="button" className="val" onClick={() => oneTap(i)}
-                    aria-label={isLogged(i) ? `Set ${i + 1} logged, tap to change` : `Log set ${i + 1}`}>
-                    {liftText(unit, v)}
-                  </button>
-                  <button type="button" className="bump" aria-label={`Set ${i + 1}, add a rep`} onClick={() => oneBump(i, 1, 0)}>+ rep</button>
-                  {unit && <button type="button" className="bump" aria-label={`Set ${i + 1}, add weight`} onClick={() => oneBump(i, 0, step)}>+ {unit === 'cm' ? 'cm' : 'kg'}</button>}
-                </div>
-                {editSet === i && (
-                  <div className="exrow-edit" style={{ marginLeft: 24 }}>
-                    {unit && (
-                      <label className="inp"><input inputMode="decimal" aria-label={unitText} defaultValue={v?.w ?? ''} onChange={(e) => oneSet(i, { w: parseNum(e.target.value), r: shown(i)?.r ?? null })} /><span className="sfx">{unitText}</span></label>
-                    )}
-                    <label className="inp"><input inputMode="numeric" aria-label="Reps" defaultValue={v?.r ?? ''} onChange={(e) => { const x = parseNum(e.target.value); oneSet(i, { w: shown(i)?.w ?? null, r: x == null ? null : Math.round(x) }); }} /><span className="sfx">reps</span></label>
-                    <button type="button" className="linkbtn quiet" onClick={() => { oneSet(i, null); setEditSet(null); }}>Clear</button>
-                    <button type="button" className="linkbtn" onClick={() => setEditSet(null)}>Done</button>
-                  </div>
-                )}
-              </div>
+              <button
+                key={i} type="button"
+                className={`setchip${isLogged(i) ? ' on' : ''}${sel === i ? ' sel' : ''}`}
+                aria-pressed={sel === i}
+                aria-label={`Set ${i + 1}: ${liftText(unit, v)}${isLogged(i) ? ', done' : ''}`}
+                onClick={() => tapChip(i)}
+              >
+                {unit && !oneWeight ? `${fmtNum(v?.w ?? 0)}×${v?.r ?? '–'}` : v?.r ?? '–'}
+              </button>
             );
           })}
         </div>
-      )}
+        <button type="button" className="bump" onClick={() => plus(1, 0)}>+ rep</button>
+        {unit && <button type="button" className="bump" onClick={() => plus(0, step)}>+ {unit === 'cm' ? 'cm' : 'kg'}</button>}
+      </div>
 
-      {editing && !open && (
+      {editing && (
         <div className="exrow-edit">
           {unit && (
-            <label className="inp"><input inputMode="decimal" aria-label={unitText} defaultValue={now?.w ?? ''} onChange={(e) => setAll({ w: parseNum(e.target.value), r: now?.r ?? null })} /><span className="sfx">{unitText}</span></label>
+            <label className="inp"><input inputMode="decimal" aria-label={unitText} defaultValue={editVal?.w ?? ''} onChange={(e) => commit({ w: parseNum(e.target.value), r: (editTarget != null ? shown(editTarget) : now ?? base)?.r ?? null })} /><span className="sfx">{unitText}</span></label>
           )}
-          <label className="inp"><input inputMode="numeric" aria-label="Reps" defaultValue={now?.r ?? ''} onChange={(e) => { const v = parseNum(e.target.value); setAll({ w: now?.w ?? null, r: v == null ? null : Math.round(v) }); }} /><span className="sfx">reps</span></label>
-          <button type="button" className="linkbtn quiet" onClick={() => { setAll(null); setEditing(false); }}>Clear</button>
+          <label className="inp"><input inputMode="numeric" aria-label="Reps" defaultValue={editVal?.r ?? ''} onChange={(e) => { const x = parseNum(e.target.value); commit({ w: (editTarget != null ? shown(editTarget) : now ?? base)?.w ?? null, r: x == null ? null : Math.round(x) }); }} /><span className="sfx">reps</span></label>
+          <button type="button" className="linkbtn quiet" onClick={() => { commit(null); setEditing(false); }}>Clear</button>
           <button type="button" className="linkbtn" onClick={() => setEditing(false)}>Done</button>
         </div>
       )}
