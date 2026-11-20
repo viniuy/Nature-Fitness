@@ -1,0 +1,5 @@
+body.glb is derived from Z-Anatomy (https://www.z-anatomy.com), itself based on
+BodyParts3D, The Database Center for Life Science (CC BY-SA 2.1 Japan).
+Licence: Creative Commons Attribution-ShareAlike 4.0 (https://creativecommons.org/licenses/by-sa/4.0/).
+Changes: outer muscles grouped per rank muscle, decimated, head simplified to an ellipsoid.
+Rebuild with tools/export-body-model.py (Blender bpy 4.2).

@@ -698,3 +698,13 @@ button, [role='button'], .chip, .tabbar a, .sidebar a { user-select: none; -webk
 .bodymap .bm-line { stroke: var(--bm-edge); stroke-width: 1.2; }
 .bodymap .bm-head { fill: var(--bm-body); stroke: var(--bm-edge); stroke-width: 1.2; }
 .bodymap .bm-sel { stroke: var(--ink); stroke-width: 2.2; }
+
+/* ---------- 3D body ---------- */
+.body3d { --bm-body: #bdbdba; --bm-muscle: #e9e9e6; position: relative; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme='light']) .body3d { --bm-body: #4a4a46; --bm-muscle: #77776f; } }
+:root[data-theme='dark'] .body3d { --bm-body: #4a4a46; --bm-muscle: #77776f; }
+.body3d-view { width: 100%; height: min(62dvh, 520px); touch-action: pan-y; cursor: grab; }
+.body3d-view canvas { display: block; width: 100%; height: 100%; }
+.body3d-msg { position: absolute; inset: 40% 0 auto; text-align: center; margin: 0; }
+.body3d-turns { display: flex; justify-content: center; gap: 8px; margin-top: 6px; }
+.body3d-credit { margin: 8px 0 0; text-align: center; font-size: 10.5px; color: var(--muted); }

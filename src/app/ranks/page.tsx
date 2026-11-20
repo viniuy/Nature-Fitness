@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useMemo, useState } from 'react';
-import { BodyMap } from '@/components/BodyMap';
+import { Body3D } from '@/components/Body3D';
 import { RankBadge } from '@/components/RankBadge';
 import { useBodyStats, useSessions } from '@/lib/hooks';
 import { LIFT_MAP, MUSCLE_NAMES, RANKS, rankFor, scoreMuscles, type Muscle } from '@/lib/ranks';
@@ -56,7 +56,7 @@ export default function RanksPage() {
               </div>
             </div>
           )}
-          <BodyMap scores={muscles} selected={sel} onSelect={(m) => setSel(sel === m ? null : m)} />
+          <Body3D scores={muscles} selected={sel} onSelect={(m) => setSel(sel === m ? null : m)} />
           {sel && (
             <div className="card" style={{ marginTop: 12 }}>
               {selected ? (
