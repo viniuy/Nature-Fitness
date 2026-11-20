@@ -289,8 +289,8 @@ function ExerciseFocus({ ex, cur, sessions, update, motion, onNext, nextLabel }:
   const firstOpen = () => { for (let k = 0; k < n; k++) if (!isLogged(k)) return k; return n - 1; };
   const [at, setAt] = useState(firstOpen);
   const [drafts, setDrafts] = useState<Record<number, Lift>>({});
-  const [editing, setEditing] = useState(false);
-  const step = ex.step ?? defaultStep(ex.name, unit);
+  const [editing, setEditing] = useState<'' | 'w' | 'r'>('');
+  const step = defaultStep(ex.name, unit);
   const unitText = unit === '+kg' ? '+kg' : unit ?? '';
 
   // A set shows: what was logged, else your adjustment, else the set before it today, else last time's set.
@@ -316,10 +316,16 @@ function ExerciseFocus({ ex, cur, sessions, update, motion, onNext, nextLabel }:
     const next = { w: unit ? Math.max(0, Math.round(((v?.w ?? 0) + dw) * 100) / 100) : null, r: Math.max(0, (v?.r ?? 0) + dr) };
     if (isLogged(at)) write(at, next); else setDrafts({ ...drafts, [at]: next });
   };
-  const tapSet = (k: number) => { setEditing(false); setAt(k); };
+  const setVal = (key: 'w' | 'r', x: number | null) => {
+    setEditing('');
+    if (x == null) return;
+    const next = { w: v?.w ?? null, r: v?.r ?? null, [key]: key === 'r' ? Math.max(0, Math.round(x)) : Math.max(0, Math.round(x * 100) / 100) };
+    if (isLogged(at)) write(at, next); else setDrafts({ ...drafts, [at]: next });
+  };
+  const tapSet = (k: number) => { setEditing(''); setAt(k); };
   const nextOpen = (from: number) => { for (let j = from + 1; j < n; j++) if (!isLogged(j)) return j; for (let j = 0; j < from; j++) if (!isLogged(j)) return j; return -1; };
   const doneSet = () => {
-    setEditing(false);
+    setEditing('');
     if (!isLogged(at)) {
       write(at, v);
       const { [at]: _, ...rest } = drafts; // eslint-disable-line @typescript-eslint/no-unused-vars
@@ -361,34 +367,39 @@ function ExerciseFocus({ ex, cur, sessions, update, motion, onNext, nextLabel }:
         {unit && (
           <div className="dial" role="group" aria-label="Weight">
             <button type="button" aria-label={`Minus ${fmtNum(step)} ${unitText}`} onClick={() => bump(0, -step)}>−</button>
-            <button type="button" className="dial-v" onClick={() => setEditing(!editing)} aria-label="Type the weight">
-              {fmtNum(v?.w ?? 0)}<small>{unitText}</small>
-            </button>
+            {editing === 'w'
+              ? <DialInput label={unitText} decimal value={v?.w ?? 0} onDone={(x) => setVal('w', x)} />
+              : <button type="button" className="dial-v" onClick={() => setEditing('w')} aria-label="Type the weight">{fmtNum(v?.w ?? 0)}<small>{unitText}</small></button>}
             <button type="button" aria-label={`Plus ${fmtNum(step)} ${unitText}`} onClick={() => bump(0, step)}>+</button>
           </div>
         )}
         <div className="dial" role="group" aria-label="Reps">
           <button type="button" aria-label="Minus 1 rep" onClick={() => bump(-1, 0)}>−</button>
-          <button type="button" className="dial-v" onClick={() => setEditing(!editing)} aria-label="Type the reps">
-            {v?.r ?? 0}<small>reps</small>
-          </button>
+          {editing === 'r'
+            ? <DialInput label="reps" value={v?.r ?? 0} onDone={(x) => setVal('r', x)} />
+            : <button type="button" className="dial-v" onClick={() => setEditing('r')} aria-label="Type the reps">{v?.r ?? 0}<small>reps</small></button>}
           <button type="button" aria-label="Plus 1 rep" onClick={() => bump(1, 0)}>+</button>
         </div>
       </div>
-
-      {editing && (
-        <div className="exrow-edit fx-edit">
-          {unit && (
-            <label className="inp"><input inputMode="decimal" aria-label={unitText} defaultValue={v?.w ?? ''} onChange={(e) => { const x = { w: parseNum(e.target.value), r: v?.r ?? null }; if (isLogged(at)) write(at, x); else setDrafts({ ...drafts, [at]: x }); }} /><span className="sfx">{unitText}</span></label>
-          )}
-          <label className="inp"><input inputMode="numeric" aria-label="Reps" defaultValue={v?.r ?? ''} onChange={(e) => { const r = parseNum(e.target.value); const x = { w: v?.w ?? null, r: r == null ? null : Math.round(r) }; if (isLogged(at)) write(at, x); else setDrafts({ ...drafts, [at]: x }); }} /><span className="sfx">reps</span></label>
-          <button type="button" className="linkbtn" onClick={() => setEditing(false)}>Done</button>
-        </div>
-      )}
 
       <button type="button" className={`donebtn${allDone ? ' next' : ''}`} onClick={doneSet}>
         {!isLogged(at) ? 'Done set' : nextOpen(at) >= 0 ? `Go to set ${nextOpen(at) + 1}` : nextLabel}
       </button>
     </div>
+  );
+}
+
+// Tap a dial number to type it: the field opens selected, so typing replaces it. Enter or tapping away saves.
+function DialInput({ value, label, decimal, onDone }: { value: number; label: string; decimal?: boolean; onDone: (v: number | null) => void }) {
+  const done = useRef(false);
+  const finish = (el: HTMLInputElement) => { if (done.current) return; done.current = true; onDone(parseNum(el.value)); };
+  return (
+    <label className="dial-v dial-in">
+      <input autoFocus inputMode={decimal ? 'decimal' : 'numeric'} enterKeyHint="done" aria-label={label}
+        defaultValue={fmtNum(value)} onFocus={(e) => e.currentTarget.select()}
+        onBlur={(e) => finish(e.currentTarget)}
+        onKeyDown={(e) => { if (e.key === 'Enter') finish(e.currentTarget); if (e.key === 'Escape') { done.current = true; onDone(null); } }} />
+      <small>{label}</small>
+    </label>
   );
 }
