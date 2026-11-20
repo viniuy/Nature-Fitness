@@ -46,7 +46,7 @@ export default function HistoryPage() {
   return (
     <div className="narrow-wrap">
       <h1>History</h1>
-      <p className="lede">{sessions.length} sessions logged. Tap one to see the sets, or open it to edit.</p>
+      <p className="lede">{sessions.length} sessions</p>
       <input className="field" style={{ width: '100%', marginBottom: 12 }} type="search" placeholder="Search by day, exercise or note" value={q} onChange={(e) => setQ(e.target.value)} />
       {sessions.length === 0 && <p className="empty">Nothing logged yet. Sessions show up here as soon as you tick your first set.</p>}
       {months.map(([month, list]) => (

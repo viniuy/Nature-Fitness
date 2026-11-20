@@ -38,71 +38,65 @@ export default function RanksPage() {
   return (
     <>
       <h1>Ranks</h1>
-      <p className="lede">Each muscle takes the rank of your best lift for it in the last 4 months, scored by estimated one-rep max against lifters at your bodyweight.</p>
+      <p className="lede">Your best lift for each muscle in the last 4 months, against lifters at your bodyweight.</p>
 
       {!bw && (
-        <p className="banner warn">Add a weigh-in or an Evolt scan on the <Link href="/body/">Body</Link> page first. Ranks depend on your bodyweight.</p>
+        <p className="banner warn">Add a weigh-in on the <Link href="/body/">Body</Link> page first. Ranks depend on your bodyweight.</p>
       )}
 
       <div className="grid2" style={{ alignItems: 'start' }}>
-        <section className="card" style={{ padding: 16 }}>
+        <section>
           {muscles.length > 0 && (
-            <div className="row" style={{ gap: 14, marginBottom: 8 }}>
-              <RankBadge rank={rankFor(overall)} size={56} />
+            <div className="rankhero">
+              <RankBadge rank={rankFor(overall)} size={52} />
               <div>
                 <div className="eyebrow">Overall</div>
-                <div style={{ fontFamily: 'var(--f-display)', fontWeight: 800, fontSize: 30, textTransform: 'uppercase', lineHeight: 1 }}>{rankFor(overall).name}</div>
-                <div className="small muted mono">{topText(overall)} · {muscles.length} muscle groups ranked</div>
+                <div className="name">{rankFor(overall).name}</div>
+                <div className="small muted">{topText(overall)}</div>
               </div>
             </div>
           )}
-          <BodyMap scores={muscles} selected={sel} onSelect={setSel} />
+          <BodyMap scores={muscles} selected={sel} onSelect={(m) => setSel(sel === m ? null : m)} />
           {sel && (
-            <div className="card" style={{ marginTop: 10, marginBottom: 0, background: 'var(--surface-2)' }}>
+            <div className="card" style={{ marginTop: 12 }}>
               {selected ? (
                 <div className="row" style={{ gap: 14, flexWrap: 'nowrap' }}>
-                  <RankBadge rank={selected.rank} size={52} />
+                  <RankBadge rank={selected.rank} size={40} />
                   <div style={{ minWidth: 0 }}>
-                    <strong>{MUSCLE_NAMES[sel]}: {selected.rank.name}</strong>
-                    <div className="small mono">{topText(selected.percentile)}</div>
+                    <strong style={{ fontWeight: 600 }}>{MUSCLE_NAMES[sel]} · {selected.rank.name}</strong>
                     <div className="small muted">
-                      From {selected.best.exercise} on {fmtDate(selected.best.date)}: about {fmtNum(selected.best.value, 1)} {selected.best.unit === 'kg' ? 'kg one-rep max' : 'reps'}
+                      {topText(selected.percentile)}. {selected.best.exercise}, about {fmtNum(selected.best.value, 1)} {selected.best.unit === 'kg' ? 'kg 1RM' : 'reps'} on {fmtDate(selected.best.date)}.
                     </div>
                   </div>
                 </div>
               ) : (
-                <p className="hint" style={{ margin: 0 }}><strong>{MUSCLE_NAMES[sel]}</strong> is not ranked yet. Log one of these lifts to rank it: {liftsFor(sel)}.</p>
+                <p className="hint" style={{ margin: 0 }}><strong>{MUSCLE_NAMES[sel]}</strong> isn&apos;t ranked yet. Log {liftsFor(sel)} to rank it.</p>
               )}
             </div>
           )}
-          <p className="small muted" style={{ marginBottom: 0 }}>Tap a muscle for details. Grey muscles have no ranked lift yet.</p>
+          <div style={{ marginTop: 20 }}>
+            <div className="rankscale">{RANKS.map((r) => <span key={r.id} style={{ background: r.color }} />)}</div>
+            <div className="rankscale-labels">
+              {RANKS.map((r, i) => <span key={r.id}>{r.name}<small>{i === RANKS.length - 1 ? `top ${100 - r.min}%` : `${r.min}%+`}</small></span>)}
+            </div>
+          </div>
         </section>
 
         <section>
-          <h2 style={{ marginTop: 0 }}>Wood ranks</h2>
-          <div className="ranklegend">
-            {RANKS.map((r, i) => (
-              <div key={r.id} className="ranklegend-item">
-                <RankBadge rank={r} size={40} />
-                <div>
-                  <strong>{r.name}</strong>
-                  <div className="small muted mono">{i === RANKS.length - 1 ? `Top ${100 - r.min}%` : `Stronger than ${r.min}–${RANKS[i + 1].min}%`}</div>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          <h2>By muscle</h2>
+          <h2 style={{ marginTop: 0 }}>Muscles</h2>
           {ordered.length === 0 && <p className="empty">Log a few sessions and your muscles get ranked here.</p>}
           <ul className="list">
             {ordered.map((m) => (
               <li key={m.muscle}>
                 <button type="button" className="item" onClick={() => setSel(m.muscle)}>
-                  <span className="row" style={{ gap: 12, flexWrap: 'nowrap' }}>
-                    <RankBadge rank={m.rank} size={34} />
-                    <span><strong>{MUSCLE_NAMES[m.muscle]}</strong><br /><span className="small muted">{m.best.exercise}</span></span>
+                  <span style={{ minWidth: 0 }}>
+                    <strong>{MUSCLE_NAMES[m.muscle]}</strong><br />
+                    <span className="small muted">{m.best.exercise}</span>
                   </span>
-                  <span className="mono small" style={{ textAlign: 'right' }}>{m.rank.name}<br /><span className="muted">{topText(m.percentile)}</span></span>
+                  <span style={{ textAlign: 'right' }}>
+                    <span className="rankpill"><i style={{ background: m.rank.color }} />{m.rank.name}</span><br />
+                    <span className="small muted">{topText(m.percentile)}</span>
+                  </span>
                 </button>
               </li>
             ))}
@@ -110,7 +104,7 @@ export default function RanksPage() {
 
           {lifts.length > 0 && (
             <>
-              <h2>By lift</h2>
+              <h2>Lifts</h2>
               <dl className="kv">
                 {lifts.map((l) => (
                   <div key={l.standard + l.exercise} style={{ display: 'contents' }}>
@@ -121,11 +115,10 @@ export default function RanksPage() {
               </dl>
             </>
           )}
-          <p className="small muted" style={{ marginTop: 16 }}>
-            Compared with {STANDARDS_SOURCE}
-            {bw ? `, at ${fmtNum(bw.kg, 1)} kg (${fmtDate(bw.date)})` : ''}. One-rep maxes are estimated from your sets.
-            There is no public strength data for Filipino gym-goers, so this is a worldwide comparison.
-            Source: <a href="https://strengthlevel.com/strength-standards" target="_blank" rel="noreferrer">Strength Level</a>.
+          <p className="small muted" style={{ marginTop: 24 }}>
+            Compared with {STANDARDS_SOURCE}{bw ? `, at ${fmtNum(bw.kg, 1)} kg` : ''}. One-rep maxes are estimated from your sets.
+            There&apos;s no public strength data for the Philippines, so this is worldwide.{' '}
+            <a href="https://strengthlevel.com/strength-standards" target="_blank" rel="noreferrer">Source</a>
           </p>
         </section>
       </div>

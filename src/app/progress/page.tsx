@@ -105,7 +105,7 @@ export default function ProgressPage() {
           {current && (
             <div className="card">
               <div className="card-head">
-                <h3 className="card-title" style={{ fontSize: 22 }}>{current.name}</h3>
+                <h3 className="card-title">{current.name}</h3>
                 <span className="scheme">{current.top.length} sessions</span>
               </div>
               <LineChart

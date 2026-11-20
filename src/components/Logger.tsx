@@ -8,6 +8,7 @@ import {
   fmtDate, fmtNum, fmtSet, hasData, hasSet, historyFor, parseNum, rampText, sessionId, setScore, unitLabel, ymd,
 } from '@/lib/training';
 import type { Day, Exercise, Program, Session, SetEntry } from '@/lib/types';
+import { Icon } from './Icon';
 import { RestTimer, type TimerState } from './RestTimer';
 
 const blank = (): SetEntry => ({ w: null, r: null, done: false });
@@ -128,11 +129,14 @@ export function Logger() {
   return (
     <>
       <div className="row between">
-        <span className="eyebrow">{date === today ? 'Today' : fmtDate(date, { weekday: 'long', day: 'numeric', month: 'long' })}</span>
+        <label className="dateline">
+          <Icon name="calendar" />
+          {date === today ? 'Today' : fmtDate(date, { weekday: 'short', day: 'numeric', month: 'short' })}
+          <input type="date" aria-label="Session date" value={date} max={today} onChange={(e) => pickDate(e.target.value)} />
+        </label>
         <span className="eyebrow" aria-live="polite">{saved === 'saving' ? 'Saving…' : saved === 'saved' ? 'Saved' : ''}</span>
       </div>
-      <h1>{day.name}</h1>
-      {day.focus && <p className="lede">{day.focus}</p>}
+      <h1>{day.name.split(' · ').pop()}</h1>
 
       <div className="days" role="group" aria-label="Training day">
         {program.days.map((d) => (
@@ -141,27 +145,22 @@ export function Logger() {
             className={`chip${d.id === day.id ? ' on' : ''}${loggedDays.has(d.id) ? ' logged' : ''}`}
             onClick={() => pickDay(d.id)}
           >
-            <span className="chip-n">{d.tag}</span>
             <span className="chip-s">{d.short}</span>
           </button>
         ))}
       </div>
 
-      <div className="row between" style={{ marginBottom: 14 }}>
-        <label className="lbl" htmlFor="date" style={{ margin: 0 }}>Session date</label>
-        <input id="date" type="date" className="field mono" value={date} max={today} onChange={(e) => pickDate(e.target.value)} />
-      </div>
-
       {day.warmup.length > 0 && <WarmupCard day={day} cur={cur} update={update} />}
 
-      {day.exercises.map((ex) => (
-        <ExerciseCard key={ex.id} ex={ex} cur={cur} sessions={sessions} update={update} onDone={startRest} />
-      ))}
+      <div>
+        {day.exercises.map((ex) => (
+          <ExerciseCard key={ex.id} ex={ex} cur={cur} sessions={sessions} update={update} onDone={startRest} />
+        ))}
+      </div>
 
-      <div className="card">
-        <label className="lbl" htmlFor="note">Session notes</label>
+      <div className="notes">
         <textarea
-          id="note" className="field" placeholder="How did it feel? Anything to change next time?"
+          aria-label="Session notes" className="field" placeholder="Notes"
           value={cur.note} onChange={(e) => { const v = e.target.value; update((s) => ({ ...s, note: v })); }}
         />
       </div>
@@ -173,33 +172,25 @@ export function Logger() {
 
 function WarmupCard({ day, cur, update }: { day: Day; cur: Session; update: (fn: (s: Session) => Session) => void }) {
   const done = day.warmup.filter((w) => cur.warm[w.id]).length;
-  const [open, setOpen] = useState(done < day.warmup.length);
+  const [open, setOpen] = useState(false);
   return (
-    <section className="card">
-      <div className="card-head">
-        <h3 className="card-title">Warm-up</h3>
-        <span className="scheme">{done} of {day.warmup.length} done</span>
-      </div>
-      {open ? (
-        <>
-          <p className="hint">About 10 minutes. Then do the warm-up sets shown under your first heavy lift.</p>
-          {day.warmup.map((w) => {
-            const on = !!cur.warm[w.id];
-            return (
-              <div key={w.id} className={`wurow${on ? ' done' : ''}`}>
-                <button
-                  type="button" className={`chk${on ? ' on' : ''}`} aria-pressed={on} aria-label={w.title}
-                  onClick={() => update((s) => ({ ...s, warm: { ...s.warm, [w.id]: !on } }))}
-                >{on ? '✓' : ''}</button>
-                <div className="wutext"><strong>{w.title}</strong>{w.detail && <span className="sub">{w.detail}</span>}</div>
-              </div>
-            );
-          })}
-          <button type="button" className="linkbtn quiet" onClick={() => setOpen(false)}>Hide warm-up</button>
-        </>
-      ) : (
-        <button type="button" className="linkbtn" onClick={() => setOpen(true)}>Show warm-up</button>
-      )}
+    <section className="card warm">
+      <button type="button" className="warm-head" aria-expanded={open} onClick={() => setOpen(!open)}>
+        Warm-up
+        <span className="muted">{done === day.warmup.length ? 'Done' : `${done} of ${day.warmup.length}`}</span>
+      </button>
+      {open && day.warmup.map((w) => {
+        const on = !!cur.warm[w.id];
+        return (
+          <button
+            key={w.id} type="button" className={`wurow${on ? ' done' : ''}`} aria-pressed={on}
+            onClick={() => update((s) => ({ ...s, warm: { ...s.warm, [w.id]: !on } }))}
+          >
+            <span className="wudot" aria-hidden />
+            <span className="wutext"><strong>{w.title}</strong>{w.detail && <span className="sub">{w.detail}</span>}</span>
+          </button>
+        );
+      })}
     </section>
   );
 }
@@ -238,54 +229,52 @@ function ExerciseCard({ ex, cur, sessions, update, onDone }: {
     if (done) onDone();
   };
 
+  const lastLine = last ? last.sets[ex.id].filter(hasSet).map((s) => fmtSet(unit, s)).join(', ') : '';
+
   return (
-    <section className="card" id={`ex-${ex.id}`}>
+    <section className="ex" id={`ex-${ex.id}`}>
       <div className="card-head">
-        <h3 className="card-title">{ex.name}</h3>
-        {ex.tier && <span className={`tier${ex.tier.startsWith('S') ? ' top' : ''}`} title="Muscle-growth tier">{ex.tier}</span>}
+        <button type="button" className="ex-title" onClick={() => setShowHint(!showHint)} aria-expanded={showHint}>{ex.name}</button>
         {isPr && <span className="pr">PR</span>}
-        <span className="scheme">{ex.scheme}</span>
+        <span className="scheme">{ex.scheme.split(' · ')[0]}</span>
       </div>
-      {ex.hint && (
-        <p className={`hint${showHint ? '' : ' clamp'}`} onClick={() => setShowHint(!showHint)}>{ex.hint}</p>
-      )}
-      <p className="last">
-        {last ? `Last, ${fmtDate(last.date)}: ${last.sets[ex.id].filter(hasSet).map((s) => fmtSet(unit, s)).join('  ·  ')}` : 'First time logging this one.'}
-      </p>
+      {showHint && ex.hint && <p className="hint">{ex.hint}</p>}
+      {last && <p className="last">Last time: {lastLine}</p>}
       {ramp && <p className="ramp">{ramp}</p>}
 
-      <div className={`setrow head${unit ? '' : ' nounit'}`}>
-        <span />{unit && <span>{unitLabel(unit)}</span>}<span>Reps</span><span>Done</span>
-      </div>
-      {sets.map((s, i) => {
-        const l = last?.sets[ex.id]?.[i];
-        return (
-          <div key={i} className={`setrow${unit ? '' : ' nounit'}${s.done ? ' done' : ''}`}>
-            <span className="setn">{i + 1}</span>
-            {unit && (
+      <div className="sets">
+        <div className={`setrow head${unit ? '' : ' nounit'}`}>
+          <span>Set</span>{unit && <span>{unitLabel(unit)}</span>}<span>Reps</span>
+        </div>
+        {sets.map((s, i) => {
+          const l = last?.sets[ex.id]?.[i];
+          return (
+            <div key={i} className={`setrow${unit ? '' : ' nounit'}${s.done ? ' done' : ''}`}>
+              <button type="button" className="setno" aria-pressed={s.done} aria-label={`Set ${i + 1}, ${s.done ? 'completed' : 'tap when finished'}`} onClick={() => toggleDone(i)}>
+                {i + 1}
+              </button>
+              {unit && (
+                <input
+                  inputMode="decimal" autoComplete="off" aria-label={`${ex.name}, set ${i + 1}, ${unitLabel(unit)}`}
+                  placeholder={l?.w != null ? fmtNum(l.w) : '–'} value={s.w == null ? '' : String(s.w)}
+                  onChange={(e) => setAt(i, { w: parseNum(e.target.value) })}
+                />
+              )}
               <input
-                inputMode="decimal" autoComplete="off" aria-label={`${ex.name}, set ${i + 1}, ${unitLabel(unit)}`}
-                placeholder={l?.w != null ? fmtNum(l.w) : '–'} value={s.w == null ? '' : String(s.w)}
-                onChange={(e) => setAt(i, { w: parseNum(e.target.value) })}
+                inputMode="numeric" autoComplete="off" aria-label={`${ex.name}, set ${i + 1}, reps`}
+                placeholder={l?.r != null ? String(l.r) : '–'} value={s.r == null ? '' : String(s.r)}
+                onChange={(e) => { const n = parseNum(e.target.value); setAt(i, { r: n == null ? null : Math.round(n) }); }}
               />
-            )}
-            <input
-              inputMode="numeric" autoComplete="off" aria-label={`${ex.name}, set ${i + 1}, reps`}
-              placeholder={l?.r != null ? String(l.r) : '–'} value={s.r == null ? '' : String(s.r)}
-              onChange={(e) => { const n = parseNum(e.target.value); setAt(i, { r: n == null ? null : Math.round(n) }); }}
-            />
-            <button type="button" className="chk" aria-pressed={s.done} aria-label={`Set ${i + 1} done`} onClick={() => toggleDone(i)}>
-              {s.done ? '✓' : ''}
-            </button>
-          </div>
-        );
-      })}
+            </div>
+          );
+        })}
+      </div>
       <div className="acts">
-        <button type="button" className="linkbtn" onClick={() => setAll([...sets, blank()])}>+ Add set</button>
-        {sets.length > 1 && <button type="button" className="linkbtn quiet" onClick={() => setAll(sets.slice(0, -1))}>Remove last set</button>}
+        <button type="button" className="linkbtn quiet" onClick={() => setAll([...sets, blank()])}>Add set</button>
+        {sets.length > 1 && <button type="button" className="linkbtn quiet" onClick={() => setAll(sets.slice(0, -1))}>Remove set</button>}
         {last && !hasData(sets) && (
           <button type="button" className="linkbtn" onClick={() => setAll(last.sets[ex.id].map((x) => ({ w: x.w, r: x.r, done: false })))}>
-            Fill from last time
+            Copy last time
           </button>
         )}
       </div>

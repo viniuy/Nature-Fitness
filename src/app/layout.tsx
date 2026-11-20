@@ -1,12 +1,10 @@
 import type { Metadata, Viewport } from 'next';
-import { Archivo, Big_Shoulders, IBM_Plex_Mono } from 'next/font/google';
+import { Geist } from 'next/font/google';
 import { Shell } from '@/components/Shell';
 import './globals.css';
 
 // Fonts are downloaded at build time and served with the app, so they work offline.
-const display = Big_Shoulders({ subsets: ['latin'], weight: ['700', '800'], variable: '--font-display' });
-const body = Archivo({ subsets: ['latin'], weight: ['400', '500', '600'], variable: '--font-body' });
-const num = IBM_Plex_Mono({ subsets: ['latin'], weight: ['400', '500'], variable: '--font-num' });
+const sans = Geist({ subsets: ['latin'], variable: '--font-sans' });
 
 export const metadata: Metadata = {
   title: 'Nature Fitness',
@@ -24,14 +22,14 @@ export const viewport: Viewport = {
   initialScale: 1,
   viewportFit: 'cover',
   themeColor: [
-    { media: '(prefers-color-scheme: light)', color: '#f4f6f7' },
-    { media: '(prefers-color-scheme: dark)', color: '#181e24' },
+    { media: '(prefers-color-scheme: light)', color: '#fafaf8' },
+    { media: '(prefers-color-scheme: dark)', color: '#0e0e0c' },
   ],
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${display.variable} ${body.variable} ${num.variable}`}>
+    <html lang="en" className={sans.variable}>
       <body>
         <Shell>{children}</Shell>
       </body>

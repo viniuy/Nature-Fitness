@@ -56,10 +56,10 @@ export function Shell({ children }: { children: ReactNode }) {
 
   return (
     <div className="shell">
-      <nav className="sidebar wood" aria-label="Main">
+      <nav className="sidebar" aria-label="Main">
         <div className="logo-row">
           <img src="/icons/icon-192.png" alt="" />
-          <div className="logo">Nature<br />Fitness</div>
+          <div className="logo">Nature Fitness</div>
         </div>
         {NAV.map((n) => (
           <Link key={n.href} href={n.href} aria-current={isActive(path, n.href) ? 'page' : undefined}>
@@ -87,7 +87,7 @@ export function Shell({ children }: { children: ReactNode }) {
           {children}
         </main>
       </div>
-      <nav className="tabbar wood" aria-label="Main">
+      <nav className="tabbar" aria-label="Main">
         {NAV.map((n) => (
           <Link key={n.href} href={n.href} aria-current={isActive(path, n.href) ? 'page' : undefined}>
             <Icon name={n.icon} />

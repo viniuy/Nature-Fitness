@@ -10,7 +10,8 @@ interface Props {
 }
 
 const NEUTRAL = 'var(--surface-2)';
-const EMPTY = 'var(--line)';
+const EMPTY = 'color-mix(in srgb, var(--muted) 30%, var(--surface-2))';
+
 
 /** Front and back silhouettes; each muscle is filled with its rank's wood colour. */
 export function BodyMap({ scores, selected, onSelect }: Props) {
@@ -25,15 +26,15 @@ export function BodyMap({ scores, selected, onSelect }: Props) {
         onClick={() => onSelect(m)} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onSelect(m); } }}
         style={{ cursor: 'pointer', outline: 'none' }}
         fill={s ? s.rank.color : EMPTY}
-        stroke={on ? 'var(--ink)' : 'rgba(60,35,15,0.55)'}
-        strokeWidth={on ? 2.2 : 0.9}
+        stroke={on ? 'var(--ink)' : 'var(--bg)'}
+        strokeWidth={on ? 2 : 1.5}
+        opacity={selected && !on ? 0.55 : 1}
       >
         {children}
-        <g fill="url(#bm-grain)" stroke="none" pointerEvents="none">{children}</g>
       </g>
     );
   };
-  const neutral = { fill: NEUTRAL, stroke: 'rgba(60,35,15,0.4)', strokeWidth: 0.9 };
+  const neutral = { fill: NEUTRAL, stroke: 'var(--bg)', strokeWidth: 1.5 };
 
   const Head = () => (
     <>
@@ -55,11 +56,6 @@ export function BodyMap({ scores, selected, onSelect }: Props) {
 
   return (
     <svg viewBox="0 0 420 390" className="bodymap" role="group" aria-label="Muscle ranks, front and back">
-      <defs>
-        <pattern id="bm-grain" width="24" height="10" patternUnits="userSpaceOnUse">
-          <path d="M0 5 Q6 2 12 5 T24 5" fill="none" stroke="rgba(60,30,10,0.18)" strokeWidth="0.8" />
-        </pattern>
-      </defs>
 
       {/* Front */}
       <g>

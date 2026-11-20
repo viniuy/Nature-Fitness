@@ -92,7 +92,6 @@ export default function ProgramPage() {
         <span className="eyebrow" aria-live="polite">{saved}</span>
       </div>
       <h1>Program</h1>
-      <p className="lede">Edit your training days, exercises and warm-ups. Changes save as you type and reach your phone on the next sync. Logged sessions keep the names they had.</p>
 
       <div className="days" role="tablist" aria-label="Days">
         {prog.days.map((d) => (
@@ -100,7 +99,7 @@ export default function ProgramPage() {
             <span className="chip-n">{d.tag}</span><span className="chip-s">{d.short}</span>
           </button>
         ))}
-        <button type="button" className="chip" onClick={addDay} aria-label="Add a day"><span className="chip-n">+</span><span className="chip-s">Add</span></button>
+        <button type="button" className="chip" onClick={addDay} aria-label="Add a day"><span className="chip-s">+ Add day</span></button>
       </div>
 
       {day && (

@@ -77,11 +77,10 @@ export default function BodyPage() {
   return (
     <div className="narrow-wrap">
       <h1>Body</h1>
-      <p className="lede">Log a weigh-in, or import an Evolt scan from a screenshot of its Result Sheet.</p>
 
       <div className="card">
-        <h3 className="card-title" style={{ fontSize: 22 }}>Import Evolt scan</h3>
-        <p className="hint">In the Evolt Active app, open the Result Sheet and take a screenshot, then choose it here. You check every number before it is saved.</p>
+        <h3 className="card-title">Import Evolt scan</h3>
+        <p className="hint">Screenshot the Result Sheet in the Evolt app and choose it here. You check every number before saving.</p>
         <input ref={fileRef} type="file" accept="image/*" hidden onChange={(e) => void onFile(e.target.files?.[0])} />
         <div className="row" style={{ marginTop: 10 }}>
           <button type="button" className="btn" disabled={!!busy} onClick={() => fileRef.current?.click()}>
@@ -100,7 +99,7 @@ export default function BodyPage() {
       </div>
 
       <form className="card" onSubmit={addWeighIn}>
-        <h3 className="card-title" style={{ fontSize: 22 }}>Weigh-in</h3>
+        <h3 className="card-title">Weigh-in</h3>
         <div className="formgrid" style={{ marginTop: 10 }}>
           <div><label className="lbl" htmlFor="bdate">Date</label><input id="bdate" type="date" className="field mono" value={date} max={ymd()} onChange={(e) => setDate(e.target.value)} /></div>
           <div><label className="lbl" htmlFor="bw">Weight, kg</label><input id="bw" className="field mono" inputMode="decimal" placeholder="69.6" value={weight} onChange={(e) => setWeight(e.target.value)} /></div>
