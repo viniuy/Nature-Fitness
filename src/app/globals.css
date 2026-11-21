@@ -708,3 +708,16 @@ button, [role='button'], .chip, .tabbar a, .sidebar a { user-select: none; -webk
 .body3d-msg { position: absolute; inset: 40% 0 auto; text-align: center; margin: 0; }
 .body3d-turns { display: flex; justify-content: center; gap: 8px; margin-top: 6px; }
 .body3d-credit { margin: 8px 0 0; text-align: center; font-size: 10.5px; color: var(--muted); }
+
+/* 2.5D body (Ranks) */
+.body25 { --bm-body: #b4b4b0; --bm-muscle: #f1f1ee; --bm-edge: #8e8e8a; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme='light']) .body25 { --bm-body: #4a4a46; --bm-muscle: #85857e; --bm-edge: #2a2a28; } }
+:root[data-theme='dark'] .body25 { --bm-body: #4a4a46; --bm-muscle: #85857e; --bm-edge: #2a2a28; }
+.body25-svg { display: block; width: 100%; max-width: 440px; height: auto; margin: 0 auto; }
+.body25 .b25-body { fill: var(--bm-body); }
+.body25 .b25-m { fill: var(--bm-muscle); stroke: var(--bm-edge); stroke-width: 2; stroke-linejoin: round; cursor: pointer; outline: none; filter: drop-shadow(0 2px 2px rgb(0 0 0 / 0.22)); -webkit-tap-highlight-color: transparent; }
+.body25 .b25-m:focus-visible { stroke: var(--accent); stroke-width: 4; }
+.body25 .b25-shade { mix-blend-mode: multiply; pointer-events: none; }
+.body25 .b25-sel { fill: none; stroke: var(--ink); stroke-width: 6; stroke-linejoin: round; pointer-events: none; }
+.body25 .b25-line { fill: none; stroke: var(--bm-edge); stroke-width: 2.5; stroke-linejoin: round; pointer-events: none; }
+.body25 .b25-label { font-size: 30px; font-weight: 500; letter-spacing: 0.12em; fill: var(--muted); }

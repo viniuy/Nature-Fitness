@@ -1,5 +1,0 @@
-body.glb is derived from Z-Anatomy (https://www.z-anatomy.com), itself based on
-BodyParts3D, The Database Center for Life Science (CC BY-SA 2.1 Japan).
-Licence: Creative Commons Attribution-ShareAlike 4.0 (https://creativecommons.org/licenses/by-sa/4.0/).
-Changes: outer muscles grouped per rank muscle, voxel-remeshed into low-poly shapes on a simplified body shell; head is a low-poly ellipsoid.
-Rebuild with tools/export-body-lowpoly.py (Blender bpy 4.2).

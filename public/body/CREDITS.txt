@@ -1,0 +1,8 @@
+The Ranks body (shade-front.webp, shade-back.webp and the muscle shapes in
+src/lib/body25d.ts) is derived from Z-Anatomy (https://www.z-anatomy.com),
+itself based on BodyParts3D, The Database Center for Life Science (CC BY-SA 2.1 Japan).
+Licence: Creative Commons Attribution-ShareAlike 4.0 (https://creativecommons.org/licenses/by-sa/4.0/).
+Changes: outer muscles grouped per rank muscle, rendered flat from the front and
+back with a simplified body shell, then traced into shapes with baked shading.
+Rebuild: tools/export-body-model.py and tools/export-body-lowpoly.py make the 3D
+sources, tools/render-body-25d.py renders the views, tools/trace-body-25d.py traces them.
