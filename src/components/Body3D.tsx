@@ -68,7 +68,7 @@ export function Body3D({ scores, selected, onSelect }: Props) {
         root.traverse((o) => {
           const m = o as InstanceType<typeof THREE.Mesh>;
           if (!m.isMesh) return;
-          m.material = new THREE.MeshStandardMaterial({ color: NEUTRAL.has(m.name) ? bodyGrey : muscleGrey, roughness: 0.75, metalness: 0 });
+          m.material = new THREE.MeshStandardMaterial({ color: NEUTRAL.has(m.name) ? bodyGrey : muscleGrey, roughness: 0.8, metalness: 0, flatShading: true });
           meshes.set(m.name, m);
         });
 
