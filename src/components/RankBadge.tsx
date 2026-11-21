@@ -20,7 +20,7 @@ import type { Rank } from '@/lib/ranks';
  * metallic sheen on the top two tiers, not from blur.
  */
 
-const SCALE = [0.56, 0.6, 0.63, 0.65, 0.66, 0.66, 0.66, 0.66, 0.66, 0.66];
+const SCALE = [0.56, 0.6, 0.63, 0.65, 0.66, 0.66, 0.65, 0.63, 0.6, 0.57];
 const CHARCOAL = '#17181a';
 
 function mix(a: string, b: string, t: number) {
@@ -54,29 +54,6 @@ const SPIKES: Record<number, { n: number; len: number; w: number; back?: { n: nu
   9: { n: 10, len: 24, w: 3.4, back: { n: 9, len: 28 } },
 };
 
-/**
- * The banner across the foot of the shield from Gold up: wider each tier,
- * swallowtail ends from Platinum, a second back ribbon from Master, gold trim
- * from Grandmaster, and a royal blue and gold sash for Champion.
- */
-const BANNER: Record<number, { half: number; h: number; tail: number; back?: boolean }> = {
-  3: { half: 14, h: 3.6, tail: 5 },
-  4: { half: 16, h: 4, tail: 6.5 },
-  5: { half: 17.5, h: 4.3, tail: 7.5 },
-  6: { half: 19, h: 4.6, tail: 8.5 },
-  7: { half: 20.5, h: 4.9, tail: 9.5, back: true },
-  8: { half: 22, h: 5.2, tail: 11, back: true },
-  9: { half: 24, h: 5.6, tail: 12, back: true },
-};
-function bannerPaths(half: number, h: number, tail: number, y: number, sag = 2.4) {
-  const band = `M${-half} ${y - h} Q0 ${y - h + sag} ${half} ${y - h} L${half} ${y + h} Q0 ${y + h + sag} ${-half} ${y + h} Z`;
-  const end = (g: 1 | -1) => {
-    const x0 = g * (half - 1.5), x1 = g * (half + tail), xn = g * (half + tail * 0.55);
-    return `M${x0} ${y - h + 2} L${x1} ${y - h + 2.6} L${xn} ${y + 1.6} L${x1} ${y + h + 4.2} L${x0} ${y + h + 2.6} Z`;
-  };
-  const fold = (g: 1 | -1) => `M${g * half} ${y - h} L${g * half} ${y + h} L${g * (half - 1.5)} ${y + h + 2.6} L${g * (half - 1.5)} ${y - h + 2} Z`;
-  return { band, ends: [end(1), end(-1)], folds: [fold(1), fold(-1)] };
-}
 function spikeRing(n: number, len: number, w: number, open = 38) {
   return Array.from({ length: n }, (_, i) => {
     const a = open + ((360 - 2 * open) * (i + 0.5)) / n;
@@ -95,7 +72,7 @@ function scalePath(d: string, k: number) {
 
 /** One tapered wing blade pointing along +x from the origin. */
 function feather(len: number, w: number) {
-  return `M0 ${-w * 0.5} L${len * 0.8} ${-w * 0.42} Q${len} 0 ${len * 0.8} ${w * 0.42} L0 ${w * 0.5} Z`;
+  return `M0 ${-w * 0.5} L${len * 0.72} ${-w * 0.55} L${len} ${-w * 0.1} L${len * 0.78} ${w * 0.4} L0 ${w * 0.5} Z`;
 }
 
 function leaf(len: number, w: number) {
@@ -105,16 +82,25 @@ function leaf(len: number, w: number) {
 interface Wing { n: number; from: number; to: number; len: [number, number]; w: number; at: [number, number] }
 
 // Evenly spaced blades; the top blade is the longest, like a heraldic wing.
+// Raised wings growing out from behind the lifter's shoulders: blades fan from
+// pointing out sideways to pointing up, longest near the upper tip.
 const WINGS: Record<number, Wing[]> = {
-  7: [{ n: 4, from: 178, to: 226, len: [11, 17], w: 3.2, at: [-11, -4] }],
+  4: [{ n: 4, from: 168, to: 222, len: [10, 15], w: 4, at: [-10, -19] }],
+  5: [{ n: 5, from: 164, to: 226, len: [12, 19], w: 4.4, at: [-10, -20] }],
+  6: [{ n: 6, from: 160, to: 230, len: [14, 24], w: 4.8, at: [-10, -21] }],
+  7: [
+    { n: 7, from: 156, to: 234, len: [18, 32], w: 5.4, at: [-10, -22] },
+    { n: 5, from: 166, to: 222, len: [12, 19], w: 4.8, at: [-11, -20] },
+  ],
   8: [
-    { n: 5, from: 172, to: 232, len: [13, 23], w: 3.4, at: [-11, -5] },
-    { n: 4, from: 182, to: 224, len: [9, 15], w: 3.2, at: [-12, -3] },
+    { n: 8, from: 152, to: 238, len: [22, 40], w: 6, at: [-10, -23] },
+    { n: 6, from: 162, to: 228, len: [16, 27], w: 5.4, at: [-11, -21] },
+    { n: 5, from: 172, to: 218, len: [10, 16], w: 4.8, at: [-12, -19] },
   ],
   9: [
-    { n: 6, from: 166, to: 238, len: [15, 29], w: 3.6, at: [-11, -6] },
-    { n: 5, from: 176, to: 230, len: [11, 21], w: 3.4, at: [-12, -4] },
-    { n: 4, from: 186, to: 222, len: [8, 13], w: 3.2, at: [-12, -2] },
+    { n: 9, from: 148, to: 242, len: [27, 52], w: 6.6, at: [-10, -24] },
+    { n: 7, from: 158, to: 232, len: [19, 36], w: 6, at: [-11, -22] },
+    { n: 6, from: 168, to: 222, len: [12, 22], w: 5.4, at: [-12, -20] },
   ],
 };
 
@@ -266,8 +252,29 @@ export function RankBadge({ rank, size = 44 }: { rank: Rank; size?: number }) {
           <stop offset="0.35" stopColor={t === 9 ? '#fffbe6' : lighter} />
           <stop offset="1" stopColor={t === 9 ? gold : c} />
         </linearGradient>
-        <filter id={id('shadow')} x="-30%" y="-30%" width="160%" height="170%">
-          <feDropShadow dx="0" dy="1.6" stdDeviation="1.4" floodColor={darker} floodOpacity="0.32" />
+        {/* Chrome: bright and dark bands like polished metal catching studio light */}
+        <linearGradient id={id('chrome')} x1="0" y1="0" x2="0.3" y2="1">
+          <stop offset="0" stopColor={lighter} />
+          <stop offset="0.22" stopColor={c} />
+          <stop offset="0.45" stopColor={darker} />
+          <stop offset="0.52" stopColor={light} />
+          <stop offset="0.78" stopColor={c} />
+          <stop offset="1" stopColor={darker} />
+        </linearGradient>
+        <linearGradient id={id('chromeTrim')} x1="0" y1="0" x2="0.3" y2="1">
+          <stop offset="0" stopColor={trim.light} />
+          <stop offset="0.25" stopColor={trim.base} />
+          <stop offset="0.46" stopColor={mix(trim.dark, CHARCOAL, 0.3)} />
+          <stop offset="0.54" stopColor={trim.light} />
+          <stop offset="0.8" stopColor={trim.base} />
+          <stop offset="1" stopColor={trim.dark} />
+        </linearGradient>
+        <radialGradient id={id('backlight')} cx="50%" cy="45%" r="50%">
+          <stop offset="0" stopColor={t === 9 ? gold : light} stopOpacity="0.55" />
+          <stop offset="1" stopColor={t === 9 ? gold : light} stopOpacity="0" />
+        </radialGradient>
+        <filter id={id('shadow')} x="-40%" y="-40%" width="180%" height="190%">
+          <feDropShadow dx="0" dy="2.4" stdDeviation="1.8" floodColor={mix(c, CHARCOAL, 0.8)} floodOpacity="0.5" />
         </filter>
         <mask id={id('facemask')} maskUnits="userSpaceOnUse" x="-40" y="-40" width="80" height="80"><path d={scalePath(body, 0.74)} fill="#fff" /></mask>
         <mask id={id('platemask')} maskUnits="userSpaceOnUse" x="-40" y="-40" width="80" height="80"><path d={body} fill="#fff" /></mask>
@@ -287,6 +294,7 @@ export function RankBadge({ rank, size = 44 }: { rank: Rank; size?: number }) {
         </linearGradient>
       </defs>
 
+      {t >= 6 && <ellipse cx="32" cy="30" rx={18 + (t - 6) * 4} ry={16 + (t - 6) * 3} fill={`url(#${id('backlight')})`} className="rb-back" />}
       <g transform={`translate(32 ${(40 + t * 0.1).toFixed(1)}) scale(${SCALE[t]})`} filter={`url(#${id('shadow')})`}>
         {/* Wings, mirrored */}
         {wings.length > 0 && [1, -1].map((side) => (
@@ -294,10 +302,12 @@ export function RankBadge({ rank, size = 44 }: { rank: Rank; size?: number }) {
             {wings.map((w, row) => Array.from({ length: w.n }, (_, i) => {
               const k = w.n === 1 ? 0 : i / (w.n - 1);
               const a = w.from + (w.to - w.from) * k;
-              const len = w.len[0] + (w.len[1] - w.len[0]) * Math.sin(k * Math.PI * 0.85);
+              const len = w.len[0] + (w.len[1] - w.len[0]) * Math.sin(k * Math.PI * 0.6);
               return (
-                <path key={`${row}-${i}`} d={feather(len, w.w)} transform={`translate(${w.at[0]} ${w.at[1]}) rotate(${a})`}
-                  fill={row === 0 ? `url(#${id('trim')})` : `url(#${id('rim')})`} stroke={row === 0 ? trim.dark : darker} strokeOpacity="0.45" strokeWidth="0.5" />
+                <g key={`${row}-${i}`} transform={`translate(${w.at[0]} ${w.at[1]}) rotate(${a})`}>
+                  <path d={feather(len, w.w)} fill={row === 0 ? `url(#${id('chromeTrim')})` : `url(#${id('chrome')})`} stroke={row === 0 ? trim.dark : darker} strokeOpacity="0.7" strokeWidth="0.5" />
+                  <path d={`M1 ${-w.w * 0.12} L${len * 0.86} ${-w.w * 0.18}`} stroke="#fff" strokeOpacity="0.6" strokeWidth="0.45" strokeLinecap="round" />
+                </g>
               );
             }))}
           </g>
@@ -307,11 +317,11 @@ export function RankBadge({ rank, size = 44 }: { rank: Rank; size?: number }) {
         {SPIKES[t] && (
           <g>
             {SPIKES[t].back && spikeRing(SPIKES[t].back!.n, SPIKES[t].back!.len, SPIKES[t].w * 0.8, 30).map((x, i) => (
-              <path key={`b${i}`} d={x.d} transform={`translate(0 2) rotate(${x.a})`} fill={`url(#${id('rim')})`} stroke={darker} strokeOpacity="0.6" strokeWidth="0.5" />
+              <path key={`b${i}`} d={x.d} transform={`translate(0 2) rotate(${x.a})`} fill={`url(#${id('chrome')})`} stroke={darker} strokeOpacity="0.6" strokeWidth="0.5" />
             ))}
             {spikeRing(SPIKES[t].n, SPIKES[t].len, SPIKES[t].w).map((x, i) => (
               <g key={`f${i}`} transform={`translate(0 2) rotate(${x.a})`}>
-                <path d={x.d} fill={`url(#${id('trim')})`} stroke={trim.dark} strokeOpacity="0.7" strokeWidth="0.5" />
+                <path d={x.d} fill={`url(#${id('chromeTrim')})`} stroke={trim.dark} strokeOpacity="0.7" strokeWidth="0.5" />
                 <path d={`M${SPIKES[t].w * 0.2} -2 L0 ${-SPIKES[t].len * 0.8}`} stroke="#fff" strokeOpacity="0.4" strokeWidth="0.5" />
               </g>
             ))}
@@ -348,7 +358,7 @@ export function RankBadge({ rank, size = 44 }: { rank: Rank; size?: number }) {
         </g>
 
         {/* Plate */}
-        <path d={body} fill={`url(#${id('rim')})`} stroke={darker} strokeOpacity="0.55" strokeWidth="0.8" />
+        <path d={body} fill={`url(#${id('chrome')})`} stroke={mix(c, CHARCOAL, 0.75)} strokeOpacity="0.8" strokeWidth="0.8" />
         <path d={scalePath(body, 0.74)} fill={t === 9 ? `url(#${id('royal')})` : `url(#${id('face')})`} />
         {/* centre ridge: the right half of the face sits in shadow */}
         <g mask={`url(#${id('facemask')})`}>
@@ -379,37 +389,8 @@ export function RankBadge({ rank, size = 44 }: { rank: Rank; size?: number }) {
           </g>
         )}
 
-        {/* Banner across the foot of the shield */}
-        {BANNER[t] && (() => {
-          const B = BANNER[t];
-          const y = 16.5;
-          const front = bannerPaths(B.half, B.h, B.tail, y, 3.4);
-          const back = B.back ? bannerPaths(B.half + 3, B.h + 1, B.tail + 4, y + 4, 4) : null;
-          const ribbon = t === 9 ? `url(#${id('royal')})` : `url(#${id('rim')})`;
-          const edge = t >= 8 ? gold : lighter;
-          return (
-            <g>
-              {back && (
-                <g fill={`url(#${id('trim')})`} stroke={trim.dark} strokeOpacity="0.6" strokeWidth="0.5">
-                  {back.ends.map((d, i) => <path key={i} d={d} />)}
-                </g>
-              )}
-              <g fill={t === 9 ? '#a8302a' : dark} stroke={t === 9 ? '#6e1b16' : darker} strokeOpacity="0.7" strokeWidth="0.5">
-                {front.ends.map((d, i) => <path key={i} d={d} />)}
-              </g>
-              <g fill={t === 9 ? '#6e1b16' : darker}>{front.folds.map((d, i) => <path key={i} d={d} />)}</g>
-              <path d={front.band} fill={ribbon} stroke={t >= 8 ? goldDark : darker} strokeOpacity="0.7" strokeWidth="0.6" />
-              <path d={`M${-B.half + 1} ${y - B.h + 0.9} Q0 ${y - B.h + 4.3} ${B.half - 1} ${y - B.h + 0.9} M${-B.half + 1} ${y + B.h - 0.9} Q0 ${y + B.h + 2.5} ${B.half - 1} ${y + B.h - 0.9}`}
-                fill="none" stroke={edge} strokeOpacity={t >= 8 ? 0.95 : 0.6} strokeWidth={t >= 8 ? 0.8 : 0.5} />
-              {t >= 6 && [-1, 0, 1].map((k) => (
-                <path key={k} d="M0 -2 L2 0 L0 2 L-2 0 Z" transform={`translate(${k * B.half * 0.42} ${y + 1.7 + (k === 0 ? 0.6 : 0.3)})`} fill={t >= 8 ? gold : lighter} stroke={t >= 8 ? goldDark : darker} strokeWidth="0.3" />
-              ))}
-            </g>
-          );
-        })()}
-
         {/* Metallic sheen sweeping across the top two tiers */}
-        {t >= 8 && (
+        {t >= 4 && (
           <g mask={`url(#${id('platemask')})`}>
             <rect className="rb-sheen" x="-30" y="-30" width="14" height="60" fill={`url(#${id('sheen')})`} transform="skewX(-20)" />
           </g>

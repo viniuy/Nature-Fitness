@@ -971,8 +971,10 @@ button, [role='button'], .chip, .tabbar a, .sidebar a { user-select: none; -webk
 .rankbadge .rb-sheen { animation: rb-sheen 4.8s cubic-bezier(0.16, 1, 0.3, 1) infinite; }
 @keyframes rb-sheen { 0% { transform: skewX(-20deg) translateX(0); } 55%, 100% { transform: skewX(-20deg) translateX(64px); } }
 .rankbadge .rb-sparkle path { animation: rb-twinkle 3.2s ease-in-out infinite; }
+.rankbadge .rb-back { animation: rb-breathe 4s ease-in-out infinite; }
+@keyframes rb-breathe { 50% { opacity: 0.6; } }
 @keyframes rb-twinkle { 0%, 100% { opacity: 0.2; } 50% { opacity: 1; } }
-@media (prefers-reduced-motion: reduce) { .rankbadge .rb-sheen { animation: none; opacity: 0; } .rankbadge .rb-sparkle path { animation: none; } }
+@media (prefers-reduced-motion: reduce) { .rankbadge .rb-sheen { animation: none; opacity: 0; } .rankbadge .rb-back { animation: none; } .rankbadge .rb-sparkle path { animation: none; } }
 .rankladder { display: grid; grid-template-columns: repeat(5, 1fr); gap: 22px 4px; margin-top: 6px; }
 .rankladder span { display: flex; flex-direction: column; align-items: center; gap: 3px; text-align: center; min-width: 0; }
 .rankladder b { font-size: 11px; font-weight: 600; color: var(--ink); max-width: 100%; letter-spacing: -0.01em; overflow-wrap: anywhere; }
