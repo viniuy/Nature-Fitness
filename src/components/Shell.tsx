@@ -5,12 +5,14 @@ import { usePathname } from 'next/navigation';
 import { useEffect, type ReactNode } from 'react';
 import { ensureSeed } from '@/lib/db';
 import { startSync } from '@/lib/sync';
-import { useSyncState } from '@/lib/hooks';
+import { useCoachUnread, useSyncState } from '@/lib/hooks';
+import { startCoach } from '@/lib/coach';
 import { Icon, type IconName } from './Icon';
 import { haptic } from '@/lib/haptics';
 
 const NAV: { href: string; label: string; icon: IconName }[] = [
   { href: '/', label: 'Today', icon: 'dumbbell' },
+  { href: '/coach/', label: 'Coach', icon: 'coach' },
   { href: '/history/', label: 'History', icon: 'calendar' },
   { href: '/progress/', label: 'Progress', icon: 'chart' },
   { href: '/ranks/', label: 'Ranks', icon: 'medal' },
@@ -45,9 +47,10 @@ export function SyncPill() {
 
 export function Shell({ children }: { children: ReactNode }) {
   const path = usePathname() || '/';
+  const unread = useCoachUnread() && !isActive(path, '/coach/');
 
   useEffect(() => {
-    void ensureSeed().then(startSync);
+    void ensureSeed().then(startSync).then(startCoach);
     if ('serviceWorker' in navigator && process.env.NODE_ENV === 'production') {
       navigator.serviceWorker.register('/sw.js').catch(() => {});
     }
@@ -73,6 +76,7 @@ export function Shell({ children }: { children: ReactNode }) {
           <Link key={n.href} href={n.href} aria-current={isActive(path, n.href) ? 'page' : undefined}>
             <Icon name={n.icon} />
             {n.label}
+            {n.href === '/coach/' && unread && <span className="navdot" aria-label="New reply" />}
           </Link>
         ))}
         <div className="spacer" />
@@ -100,6 +104,7 @@ export function Shell({ children }: { children: ReactNode }) {
           <Link key={n.href} href={n.href} aria-current={isActive(path, n.href) ? 'page' : undefined}>
             <Icon name={n.icon} />
             {n.label}
+            {n.href === '/coach/' && unread && <span className="navdot" aria-label="New reply" />}
           </Link>
         ))}
       </nav>

@@ -16,6 +16,20 @@ export interface FileRow {
   createdAt: number;
 }
 
+/** A message in the coach conversation. Kept on this device only. */
+export interface CoachRow {
+  id: string;
+  role: 'user' | 'assistant';
+  kind: 'feedback' | 'chat';
+  text: string;
+  createdAt: number;
+  /** For feedback: the session that was reviewed. */
+  sessionId?: string;
+  /** User messages wait as pending until the coach has answered them. */
+  status?: 'pending' | 'done' | 'error';
+  error?: string;
+}
+
 export interface MetaRow {
   key: string;
   value: unknown;
@@ -28,6 +42,7 @@ class FitnessDB extends Dexie {
   outbox!: Table<OutboxRow, string>;
   files!: Table<FileRow, string>;
   meta!: Table<MetaRow, string>;
+  coach!: Table<CoachRow, string>;
 
   constructor() {
     super('nature-fitness');
@@ -39,6 +54,7 @@ class FitnessDB extends Dexie {
       files: 'id',
       meta: 'key',
     });
+    this.version(2).stores({ coach: 'id, createdAt, sessionId, status' });
   }
 }
 

@@ -42,3 +42,20 @@ export function useIsWide(): boolean {
   }, []);
   return wide;
 }
+
+export function useCoachRows() {
+  return useLiveQuery(() => db.coach.orderBy('createdAt').toArray(), []);
+}
+
+/** True when the coach has replied since the Coach tab was last opened. */
+export function useCoachUnread(): boolean {
+  return useLiveQuery(async () => {
+    const seen = ((await db.meta.get('coachSeen'))?.value as number | undefined) ?? 0;
+    const last = await db.coach.orderBy('createdAt').last();
+    return !!last && last.role === 'assistant' && last.createdAt > seen;
+  }, []) ?? false;
+}
+
+export function useCoachForSession(sessionId: string | undefined) {
+  return useLiveQuery(async () => (sessionId ? db.coach.where('sessionId').equals(sessionId).sortBy('createdAt') : []), [sessionId]);
+}

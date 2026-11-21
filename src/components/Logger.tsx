@@ -3,6 +3,9 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { db, deleteRecord, saveRecord } from '@/lib/db';
+import { COACH_NAME, finishWorkout, onCoachIssue, type CoachIssue } from '@/lib/coach';
+import { useCoachForSession } from '@/lib/hooks';
+import Link from 'next/link';
 import { useActiveProgram, useSessions } from '@/lib/hooks';
 import { defaultStep, fmtDate, fmtNum, hasData, hasSet, historyFor, parseNum, sessionId, setScore, ymd } from '@/lib/training';
 import type { Day, Exercise, Program, Session, SetEntry } from '@/lib/types';
@@ -110,8 +113,51 @@ export function Logger() {
   if (program === null) return <p className="empty">No program yet. Add one on the Program page.</p>;
   if (!day || !cur) return <p className="empty">Loading…</p>;
 
+  const onFinish = async () => {
+    const id = cur.id, label = `${day.name.split(' · ').pop()} · ${fmtDate(date, { weekday: 'short', day: 'numeric', month: 'short' })}`;
+    await flush();
+    await finishWorkout(id, label);
+  };
+
   return <Workout program={program} day={day} cur={cur} sessions={sessions} date={date} today={today} saved={saved}
-    update={update} pickDay={pickDay} pickDate={pickDate} />;
+    update={update} pickDay={pickDay} pickDate={pickDate} onFinish={onFinish} />;
+}
+
+/** "Done workout": queues the session for coach feedback, which is sent once there is a connection. */
+function DoneWorkout({ sessionId, onFinish }: { sessionId: string; onFinish: () => Promise<void> }) {
+  const rows = useCoachForSession(sessionId);
+  const [issue, setIssue] = useState<CoachIssue>(null);
+  const [busy, setBusy] = useState(false);
+  useEffect(() => onCoachIssue(setIssue), []);
+  if (!rows) return null;
+  const ask = rows.filter((r) => r.role === 'user').pop();
+  const reply = rows.filter((r) => r.role === 'assistant').pop();
+  if (reply && ask?.status === 'done') {
+    return (
+      <Link href="/coach/" className="done-card replied">
+        <span className="coach-avatar sm" aria-hidden>W</span>
+        <span className="done-t"><b>{COACH_NAME} reviewed this workout</b><span>{reply.text.split('\n')[0].slice(0, 90)}{reply.text.length > 90 ? '…' : ''}</span></span>
+        <Icon name="right" size={16} />
+      </Link>
+    );
+  }
+  if (ask && ask.status !== 'done') {
+    return (
+      <Link href="/coach/" className="done-card">
+        <span className="coach-avatar sm" aria-hidden>W</span>
+        <span className="done-t">
+          <b>Workout saved</b>
+          <span>{ask.status === 'error' ? ask.error : issue === 'offline' ? `${COACH_NAME} will reply when you’re back online.` : issue === 'signed-out' ? 'Sign in to sync so the coach can reply.' : `${COACH_NAME} is reviewing it…`}</span>
+        </span>
+        <Icon name="right" size={16} />
+      </Link>
+    );
+  }
+  return (
+    <button type="button" className="btn finishbtn" disabled={busy} onClick={async () => { setBusy(true); try { await onFinish(); } finally { setBusy(false); } }}>
+      Done workout
+    </button>
+  );
 }
 
 type Lift = { w: number | null; r: number | null };
@@ -135,9 +181,10 @@ function summary(unit: Exercise['unit'], sets: SetEntry[]): string {
     : real.map((x) => `${fmtNum(x.w ?? 0)}×${x.r}`).join(' · ');
 }
 
-function Workout({ program, day, cur, sessions, date, today, saved, update, pickDay, pickDate }: {
+function Workout({ program, day, cur, sessions, date, today, saved, update, pickDay, pickDate, onFinish }: {
   program: Program; day: Day; cur: Session; sessions: Session[]; date: string; today: string; saved: string;
   update: (fn: (s: Session) => Session) => void; pickDay: (id: string) => void; pickDate: (v: string) => void;
+  onFinish: () => Promise<void>;
 }) {
   const exs = day.exercises;
   const doneCount = (ex: Exercise) => (cur.sets[ex.id] ?? []).filter(hasSet).length;
@@ -233,6 +280,7 @@ function Workout({ program, day, cur, sessions, date, today, saved, update, pick
           <h2>Tap the exercise you&apos;re doing now</h2>
           {rows}
         </section>
+        {Object.values(cur.sets).some(hasData) && <DoneWorkout sessionId={cur.id} onFinish={onFinish} />}
       </>
     );
   }

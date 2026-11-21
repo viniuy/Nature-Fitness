@@ -825,3 +825,50 @@ button, [role='button'], .chip, .tabbar a, .sidebar a { user-select: none; -webk
 .lib-item.added .lib-plus { background: var(--accent); color: var(--surface); }
 .lib-custom { margin-top: 16px; width: 100%; }
 @media (prefers-reduced-motion: reduce) { .sheet, .sheet-wrap.closing .sheet { animation: nf-fade 160ms ease-out both; } }
+
+/* Coach (W.I.L.L.I.A.M) */
+.tabbar { grid-template-columns: repeat(7, 1fr); }
+.tabbar a, .sidebar a { position: relative; }
+.navdot { position: absolute; top: 10px; left: calc(50% + 8px); width: 8px; height: 8px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 0 2px var(--bg); }
+.sidebar .navdot { position: static; margin-left: auto; box-shadow: none; }
+.coach { display: flex; flex-direction: column; min-height: calc(100dvh - 160px); max-width: 680px; }
+.coach-head { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
+.coach-head h1 { margin: 0; font-size: 24px; letter-spacing: 0.02em; }
+.coach-sub { margin: 2px 0 0; font-size: 12.5px; color: var(--muted); }
+.coach-avatar { flex: none; width: 44px; height: 44px; border-radius: 14px; display: grid; place-items: center; font-weight: 700; font-size: 20px; color: #fff; background: linear-gradient(145deg, #4f8a5b, #2f5a39); box-shadow: inset 0 -2px 0 rgb(0 0 0 / 0.15); }
+.coach-avatar.sm { width: 30px; height: 30px; border-radius: 10px; font-size: 14px; }
+.coach-log { flex: 1; display: flex; flex-direction: column; gap: 12px; padding-bottom: 12px; }
+.coach-empty p { color: var(--muted); font-size: 15px; line-height: 1.5; margin: 0 0 14px; }
+.coach-starters { display: flex; flex-wrap: wrap; gap: 8px; }
+.coach-starters .chip { height: auto; padding: 9px 14px; text-align: left; }
+.coach-msg { display: flex; gap: 8px; align-items: flex-end; animation: nf-msg 420ms var(--spring) backwards; }
+@keyframes nf-msg { from { opacity: 0; transform: translateY(8px) scale(0.98); } }
+.coach-msg.me { flex-direction: column; align-items: flex-end; }
+.coach-msg .bubble { max-width: 86%; padding: 10px 14px; border-radius: 18px; font-size: 15px; line-height: 1.45; overflow-wrap: anywhere; }
+.coach-msg.me .bubble { background: var(--accent); color: var(--surface); border-bottom-right-radius: 6px; white-space: pre-wrap; }
+.coach-msg.him .bubble { background: var(--surface); box-shadow: var(--shadow); border: 1px solid var(--line); border-bottom-left-radius: 6px; }
+.coach-msg.him .bubble p { margin: 0 0 8px; } .coach-msg.him .bubble p:last-child { margin: 0; }
+.coach-msg.him .bubble ul { margin: 0 0 8px; padding-left: 18px; } .coach-msg.him .bubble ul:last-child { margin-bottom: 0; }
+.coach-msg.him .bubble li { margin: 2px 0; }
+.coach-msg.typing .bubble { display: flex; gap: 4px; padding: 14px 16px; }
+.coach-msg.typing i { width: 7px; height: 7px; border-radius: 50%; background: var(--muted); animation: nf-dot 1.2s infinite ease-in-out; }
+.coach-msg.typing i:nth-child(2) { animation-delay: 0.15s; } .coach-msg.typing i:nth-child(3) { animation-delay: 0.3s; }
+@keyframes nf-dot { 0%, 60%, 100% { opacity: 0.3; transform: translateY(0); } 30% { opacity: 1; transform: translateY(-3px); } }
+.coach-event { align-self: center; display: flex; flex-wrap: wrap; justify-content: center; gap: 4px 8px; font-size: 12.5px; color: var(--muted); background: var(--surface-2); border-radius: 999px; padding: 6px 14px; text-align: center; max-width: 92%; }
+.coach-event > span:first-child { font-weight: 600; color: var(--ink); }
+.coach-wait, .coach-err { font-size: 12.5px; color: var(--muted); width: 100%; }
+.coach-err { color: var(--bad); }
+.coach-err .linkbtn { min-height: 0; font-size: 12.5px; margin-left: 4px; }
+.coach-time { font-variant-numeric: tabular-nums; }
+.coach-input { position: sticky; bottom: calc(var(--nav-h) + env(safe-area-inset-bottom) + 10px); display: flex; gap: 8px; align-items: flex-end; padding: 8px; margin: 0 -8px; background: color-mix(in srgb, var(--bg) 88%, transparent); -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); border-radius: 22px; }
+@media (min-width: 900px) { .coach-input { bottom: 16px; } }
+.coach-input .field { flex: 1; resize: none; min-height: 44px; max-height: 140px; border-radius: 22px; padding: 11px 16px; field-sizing: content; }
+.coach-send { flex: none; width: 44px; height: 44px; border-radius: 50%; border: 0; background: var(--accent); color: var(--surface); display: grid; place-items: center; }
+.coach-send:disabled { opacity: 0.35; }
+.coach-note { text-align: center; }
+.finishbtn { width: 100%; margin-top: 18px; min-height: 52px; font-size: 16px; }
+.done-card { display: flex; align-items: center; gap: 12px; margin-top: 18px; padding: 14px 16px; border-radius: var(--r); background: var(--surface); box-shadow: var(--shadow); border: 1px solid var(--line); color: var(--ink); text-decoration: none; }
+.done-card .done-t { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; font-size: 13.5px; color: var(--muted); }
+.done-card .done-t b { color: var(--ink); font-size: 15px; font-weight: 600; }
+.done-card > svg { color: var(--muted); flex: none; }
+@media (prefers-reduced-motion: reduce) { .coach-msg { animation: none; } }

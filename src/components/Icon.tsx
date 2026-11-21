@@ -1,4 +1,4 @@
-export type IconName = 'dumbbell' | 'calendar' | 'chart' | 'body' | 'list' | 'gear' | 'up' | 'down' | 'left' | 'right' | 'trash' | 'plus' | 'camera' | 'medal' | 'grip' | 'search' | 'edit' | 'x';
+export type IconName = 'dumbbell' | 'calendar' | 'chart' | 'body' | 'list' | 'gear' | 'up' | 'down' | 'left' | 'right' | 'trash' | 'plus' | 'camera' | 'medal' | 'grip' | 'search' | 'edit' | 'x' | 'coach' | 'send';
 
 const PATHS: Record<IconName, string> = {
   dumbbell: 'M6.5 6.5v11M17.5 6.5v11M3 9.5v5M21 9.5v5M6.5 12h11',
@@ -18,6 +18,8 @@ const PATHS: Record<IconName, string> = {
   search: 'M10.5 17a6.5 6.5 0 1 0 0-13 6.5 6.5 0 0 0 0 13zM15.5 15.5 20 20',
   edit: 'M4 20h4L19 9l-4-4L4 16zM13.5 6.5l4 4',
   x: 'M6 6l12 12M18 6 6 18',
+  coach: 'M5 5.5h14v10H11l-4.5 3.5V15.5H5zM9 10.5h.01M12 10.5h.01M15 10.5h.01',
+  send: 'M5 12h13M12 6l6 6-6 6',
   camera: 'M4 8h3.5L9 5.5h6L16.5 8H20v11H4zM12 16.5a3.2 3.2 0 1 0 0-6.4 3.2 3.2 0 0 0 0 6.4z',
 };
 
