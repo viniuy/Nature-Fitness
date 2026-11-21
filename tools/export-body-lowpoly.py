@@ -31,12 +31,13 @@ def lowpoly(ob, voxel, tris, thick=0.0, grow=0.0):
     mods = []
     if thick: mods.append(('SOLIDIFY', {'thickness': thick, 'offset': 0}))
     mods.append(('REMESH', {'mode': 'VOXEL', 'voxel_size': voxel, 'use_smooth_shade': False}))
+    mods.append(('SMOOTH', {'factor': 0.6, 'iterations': 6}))
     bake(ob, mods)
     if grow:
         bake(ob, [('DISPLACE', {'strength': grow, 'mid_level': 0})])
     n = sum(len(p.vertices) - 2 for p in ob.data.polygons)
     if n > tris: bake(ob, [('DECIMATE', {'ratio': tris / n})])
-    for p in ob.data.polygons: p.use_smooth = False
+    for p in ob.data.polygons: p.use_smooth = True
     return sum(len(p.vertices) - 2 for p in ob.data.polygons)
 
 THICK = {'lats': 0.012, 'traps': 0.012, 'obliques': 0.012, 'upperBack': 0.01, 'lowerBack': 0.01, 'chest': 0.01, 'abs': 0.01}
@@ -46,16 +47,16 @@ for g, names in G.items():
     allmus += objs
     if g == 'body': continue
     ob = joined(objs, g)
-    print(g, lowpoly(ob, 0.011, 700, THICK.get(g, 0.006)))
+    print(g, lowpoly(ob, 0.008, 2400, THICK.get(g, 0.006)))
 # shell: every muscle we know plus limb bones, fused and simplified
 shell_objs = allmus + [o for o in meshes if SHELL_EXTRA.match(o.name)]
 sh = joined(shell_objs, 'body')
-print('body', lowpoly(sh, 0.02, 5000, 0.01, grow=-0.004))
+print('body', lowpoly(sh, 0.014, 14000, 0.01, grow=-0.004))
 hb = [o for o in meshes if HEAD_RE.match(o.name)]
 pts = [o.matrix_world @ Vector(c) for o in hb for c in o.bound_box]
 lo = Vector((min(p.x for p in pts), min(p.y for p in pts), min(p.z for p in pts))); hi = Vector((max(p.x for p in pts), max(p.y for p in pts), max(p.z for p in pts)))
-bpy.ops.mesh.primitive_ico_sphere_add(subdivisions=2, location=(lo + hi) / 2)
-hd = bpy.context.active_object; hd.name = 'head'; hd.scale = ((hi.x-lo.x)/2*1.05, (hi.y-lo.y)/2*1.0, (hi.z-lo.z)/2*1.0)
+bpy.ops.mesh.primitive_ico_sphere_add(subdivisions=4, location=(lo + hi) / 2)
+hd = bpy.context.active_object; hd.name = 'head'; bpy.ops.object.shade_smooth(); hd.scale = ((hi.x-lo.x)/2*1.05, (hi.y-lo.y)/2*1.0, (hi.z-lo.z)/2*1.0)
 for c in hd.users_collection: c.objects.unlink(hd)
 col.objects.link(hd)
 for o in list(bpy.data.objects):

@@ -39,8 +39,8 @@ export function Body3D({ scores, selected, onSelect }: Props) {
         el.appendChild(renderer.domElement);
         const scene = new THREE.Scene();
         const camera = new THREE.PerspectiveCamera(24, 1, 0.01, 100);
-        scene.add(new THREE.HemisphereLight(0xffffff, 0x8a8a84, 2.2));
-        const key = new THREE.DirectionalLight(0xffffff, 1.6);
+        scene.add(new THREE.HemisphereLight(0xffffff, 0x8a8a84, 1.5));
+        const key = new THREE.DirectionalLight(0xffffff, 2.6);
         key.position.set(2, 3, 4);
         camera.add(key);
         scene.add(camera);
@@ -68,7 +68,7 @@ export function Body3D({ scores, selected, onSelect }: Props) {
         root.traverse((o) => {
           const m = o as InstanceType<typeof THREE.Mesh>;
           if (!m.isMesh) return;
-          m.material = new THREE.MeshStandardMaterial({ color: NEUTRAL.has(m.name) ? bodyGrey : muscleGrey, roughness: 0.8, metalness: 0, flatShading: true });
+          m.material = new THREE.MeshStandardMaterial({ color: NEUTRAL.has(m.name) ? bodyGrey : muscleGrey, roughness: 0.8, metalness: 0, flatShading: false });
           meshes.set(m.name, m);
         });
 
