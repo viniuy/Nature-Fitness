@@ -35,19 +35,26 @@ function zoomBox(paths: string[]): string {
  * primary movers in full colour, helpers lighter. Purely decorative, so it
  * sits behind the logger and ignores taps.
  */
-export function BodyTarget({ targets }: { targets: Targets }) {
-  const view = bestView(targets);
+export function BodyTarget({ targets, colors, view: forced, zoom = true, className = '' }: {
+  targets: Targets;
+  /** Per-muscle fill (for example rank colours), instead of the target highlight. */
+  colors?: Partial<Record<Muscle, string>>;
+  view?: 'front' | 'back';
+  zoom?: boolean;
+  className?: string;
+}) {
+  const view = forced ?? bestView(targets);
   const v = BODY_VIEWS[view];
-  const clip = `bt-${view}`;
-  const box = zoomBox(targets.primary.flatMap((m) => (v.groups[m] ? [v.groups[m]!] : [])));
+  const clip = `bt-${view}${colors ? '-c' : ''}`;
+  const box = zoom ? zoomBox(targets.primary.flatMap((m) => (v.groups[m] ? [v.groups[m]!] : []))) : `0 0 ${BODY_W} ${BODY_H}`;
   const level = (m: Muscle) => (targets.primary.includes(m) ? ' p' : targets.secondary.includes(m) ? ' s' : '');
   return (
-    <svg className="bodytarget" viewBox={box} aria-hidden preserveAspectRatio="xMidYMin meet">
+    <svg className={`bodytarget ${className}`} viewBox={box} aria-hidden preserveAspectRatio="xMidYMin meet">
       <clipPath id={clip}><path d={v.outline} /></clipPath>
       <g clipPath={`url(#${clip})`}>
         <rect className="bt-body" width={BODY_W} height={BODY_H} />
         {(Object.entries(v.groups) as [Muscle, string][]).map(([m, d]) => (
-          <path key={m} d={d} fillRule="evenodd" className={`bt-m${level(m)}`} />
+          <path key={m} d={d} fillRule="evenodd" className={`bt-m${level(m)}`} style={colors?.[m] ? { fill: colors[m] } : undefined} />
         ))}
         <image className="bt-shade" href={`/body/shade-${view}.webp`} width={BODY_W} height={BODY_H} preserveAspectRatio="none" />
       </g>

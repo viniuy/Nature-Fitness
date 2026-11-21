@@ -11,6 +11,7 @@ import { defaultStep, fmtDate, fmtNum, hasData, hasSet, historyFor, parseNum, se
 import type { Day, Exercise, Program, Session, SetEntry } from '@/lib/types';
 import { Icon } from './Icon';
 import { BodyTarget } from './BodyTarget';
+import { Home } from './Home';
 import { targetsFor } from '@/lib/targets';
 import { MUSCLE_NAMES } from '@/lib/ranks';
 
@@ -66,6 +67,7 @@ export function Logger() {
   const [saved, setSaved] = useState<'idle' | 'saving' | 'saved'>('idle');
   const saveTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const pending = useRef<Session | null>(null);
+  const fromHome = useRef(false);
 
   // Pick today's day from the weekly schedule unless one was chosen.
   useEffect(() => {
@@ -137,9 +139,19 @@ export function Logger() {
     });
   }, [day, flush]);
 
+  // No day in the address: show the home (rank body and workouts).
+  const home = !params.get('day');
   const pickDay = (id: string) => {
     setDayId(id);
     router.replace(`/?date=${date}&day=${id}`, { scroll: false });
+  };
+  const openDay = (id: string) => {
+    fromHome.current = true;
+    setDayId(id);
+    router.push(`/?date=${date}&day=${id}`, { scroll: false });
+  };
+  const goHome = () => {
+    if (fromHome.current) { fromHome.current = false; router.back(); } else router.replace('/', { scroll: false });
   };
   const pickDate = (v: string) => {
     if (!/^\d{4}-\d{2}-\d{2}$/.test(v)) return;
@@ -149,6 +161,7 @@ export function Logger() {
 
   if (program === undefined || sessions === undefined) return <p className="empty">Loading…</p>;
   if (program === null) return <p className="empty">No program yet. Add one on the Program page.</p>;
+  if (home) return <Home program={program} sessions={sessions} onPick={openDay} />;
   if (!day || !cur) return <p className="empty">Loading…</p>;
 
   const onFinish = async () => {
@@ -158,7 +171,7 @@ export function Logger() {
   };
 
   return <Workout program={program} day={day} cur={cur} sessions={sessions} date={date} today={today} saved={saved}
-    update={update} pickDay={pickDay} pickDate={pickDate} onFinish={onFinish} />;
+    update={update} pickDay={pickDay} pickDate={pickDate} onFinish={onFinish} goHome={goHome} />;
 }
 
 /** "Done workout": queues the session for coach feedback, which is sent once there is a connection. */
@@ -219,10 +232,10 @@ function summary(unit: Exercise['unit'], sets: SetEntry[]): string {
     : real.map((x) => `${fmtNum(x.w ?? 0)}×${x.r}`).join(' · ');
 }
 
-function Workout({ program, day, cur, sessions, date, today, saved, update, pickDay, pickDate, onFinish }: {
+function Workout({ program, day, cur, sessions, date, today, saved, update, pickDay, pickDate, onFinish, goHome }: {
   program: Program; day: Day; cur: Session; sessions: Session[]; date: string; today: string; saved: string;
   update: (fn: (s: Session) => Session) => void; pickDay: (id: string) => void; pickDate: (v: string) => void;
-  onFinish: () => Promise<void>;
+  onFinish: () => Promise<void>; goHome: () => void;
 }) {
   const exs = day.exercises;
   const doneCount = (ex: Exercise) => (cur.sets[ex.id] ?? []).filter(hasSet).length;
@@ -289,6 +302,7 @@ function Workout({ program, day, cur, sessions, date, today, saved, update, pick
     return (
       <>
         <div className="ftop">
+          <button type="button" className="daybtn backbtn homeback" aria-label="All workouts" onClick={goHome}><Icon name="left" size={18} /></button>
           <button type="button" className="daybtn" aria-expanded={panel} onClick={() => setPanel(!panel)}>
             {day.name.split(' · ').pop()}<Icon name={panel ? 'up' : 'down'} size={15} />
           </button>
