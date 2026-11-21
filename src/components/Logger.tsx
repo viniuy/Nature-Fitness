@@ -10,6 +10,9 @@ import { useActiveProgram, useSessions } from '@/lib/hooks';
 import { defaultStep, fmtDate, fmtNum, hasData, hasSet, historyFor, parseNum, sessionId, setScore, ymd } from '@/lib/training';
 import type { Day, Exercise, Program, Session, SetEntry } from '@/lib/types';
 import { Icon } from './Icon';
+import { BodyTarget } from './BodyTarget';
+import { targetsFor } from '@/lib/targets';
+import { MUSCLE_NAMES } from '@/lib/ranks';
 
 
 function emptySession(program: Program, day: Day, date: string): Session {
@@ -423,11 +426,19 @@ function ExerciseFocus({ ex, cur, sessions, update, motion, onNext, nextLabel }:
   const now = topOf(unit, mine);
   const isPr = !!now && hist.length > 0 && setScore(unit, { ...now, done: true }) > prevBest;
   const lastText = summary(unit, prevSets);
+  const targets = useMemo(() => targetsFor(ex.name), [ex.name]);
 
   return (
-    <div className={`fx ${motion}`}>
+    <div className={`fx ${motion}${targets.primary.length ? ' has-body' : ''}`}>
+      {targets.primary.length > 0 && <BodyTarget targets={targets} />}
       <div className="fx-head">
         <h1 className="fx-name">{ex.name}{isPr && <span className="pr">PR</span>}</h1>
+        {targets.primary.length > 0 && (
+          <p className="fx-targets">
+            {targets.primary.map((m) => <b key={m}>{MUSCLE_NAMES[m]}</b>)}
+            {targets.secondary.map((m) => <span key={m}>{MUSCLE_NAMES[m]}</span>)}
+          </p>
+        )}
         <p className="fx-last">{lastText ? `Last time ${lastText}` : 'First time'}</p>
       </div>
 

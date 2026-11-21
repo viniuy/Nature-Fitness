@@ -908,3 +908,35 @@ button, [role='button'], .chip, .tabbar a, .sidebar a { user-select: none; -webk
 .subtabs a { flex: 1; text-align: center; padding: 7px 10px; border-radius: 9px; font-size: 14px; font-weight: 500; color: var(--muted); text-decoration: none; transition: background 220ms var(--spring), color 220ms; }
 .subtabs a[aria-current='page'] { background: var(--surface); color: var(--ink); font-weight: 600; box-shadow: 0 1px 3px rgb(0 0 0 / 0.08); }
 @media (min-width: 900px) { .subtabs { margin-top: 4px; } }
+
+/* ---------- Per set: body backdrop on the left, compact logger on the right ---------- */
+.bodytarget { --bt-body: #c9c9c5; --bt-muscle: #ecebe7; --bt-edge: #b4b4b0; --bt-p: var(--accent); --bt-s: color-mix(in srgb, var(--accent) 38%, #ecebe7); }
+@media (prefers-color-scheme: dark) { :root:not([data-theme='light']) .bodytarget { --bt-body: #34342f; --bt-muscle: #4a4a45; --bt-edge: #262624; --bt-s: color-mix(in srgb, var(--accent) 45%, #4a4a45); } }
+:root[data-theme='dark'] .bodytarget { --bt-body: #34342f; --bt-muscle: #4a4a45; --bt-edge: #262624; --bt-s: color-mix(in srgb, var(--accent) 45%, #4a4a45); }
+.bodytarget { position: absolute; z-index: 0; left: -14px; top: 0; width: 46%; height: 100%; pointer-events: none; opacity: 0.95; }
+.bodytarget .bt-body { fill: var(--bt-body); }
+.bodytarget .bt-m { fill: var(--bt-muscle); stroke: var(--bt-edge); stroke-width: 2; stroke-linejoin: round; transition: fill 320ms var(--ease-out); }
+.bodytarget .bt-m.s { fill: var(--bt-s); }
+.bodytarget .bt-m.p { fill: var(--bt-p); }
+.bodytarget .bt-shade { mix-blend-mode: multiply; }
+.bodytarget .bt-line { fill: none; stroke: var(--bt-edge); stroke-width: 2.5; }
+
+.fx.has-body { position: relative; align-items: flex-end; padding-top: 2vh; }
+.fx.has-body > :not(.bodytarget) { position: relative; z-index: 1; width: 60%; }
+.fx.has-body .fx-head { min-height: 0; }
+.fx.has-body .fx-name { font-size: 20px; }
+.fx-targets { margin: 6px 0 0; display: flex; flex-wrap: wrap; justify-content: center; gap: 4px; font-size: 11.5px; }
+.fx-targets b, .fx-targets span { padding: 2px 8px; border-radius: 999px; font-weight: 600; }
+.fx-targets b { background: var(--accent); color: var(--on-accent); }
+.fx-targets span { background: color-mix(in srgb, var(--accent) 16%, transparent); color: var(--accent); font-weight: 500; }
+.fx.has-body .fx-sets { gap: 7px; margin-top: 18px; }
+.fx.has-body .fx-set { width: 40px; height: 40px; font-size: 16px; }
+.fx.has-body .fx-setno { margin-top: 10px; font-size: 12.5px; }
+.fx.has-body .dials { gap: 8px; margin-top: 12px; }
+.fx.has-body .dial { height: 64px; grid-template-columns: 44px 1fr 44px; }
+.fx.has-body .dial > button { font-size: 24px; }
+.fx.has-body .dial .dial-v { font-size: 32px; }
+.fx.has-body .dial .dial-v small { font-size: 12px; margin-top: 8px; }
+.fx.has-body .donebtn { height: 54px; font-size: 16px; }
+.bodytarget { --bt-s: color-mix(in srgb, var(--accent) 55%, #ecebe7); }
+.fx.has-body .fx-setno { justify-content: center; }
