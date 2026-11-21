@@ -47,19 +47,42 @@ const FIG_K = 1.65;
  * Angles are measured clockwise from straight up; the top is left open for the lifter.
  */
 const SPIKES: Record<number, { n: number; len: number; w: number; back?: { n: number; len: number } }> = {
-  4: { n: 4, len: 21, w: 4 },
-  5: { n: 6, len: 26, w: 4.4 },
-  6: { n: 6, len: 30, w: 4.8 },
-  7: { n: 8, len: 31, w: 5, back: { n: 7, len: 37 } },
-  8: { n: 10, len: 35, w: 5.6, back: { n: 9, len: 44 } },
-  9: { n: 12, len: 40, w: 6.2, back: { n: 11, len: 52 } },
+  5: { n: 4, len: 15, w: 2.6 },
+  6: { n: 6, len: 17, w: 2.8 },
+  7: { n: 6, len: 20, w: 3 },
+  8: { n: 8, len: 22, w: 3.2, back: { n: 7, len: 25 } },
+  9: { n: 10, len: 24, w: 3.4, back: { n: 9, len: 28 } },
 };
+
+/**
+ * The banner across the foot of the shield from Gold up: wider each tier,
+ * swallowtail ends from Platinum, a second back ribbon from Master, gold trim
+ * from Grandmaster, and a royal blue and gold sash for Champion.
+ */
+const BANNER: Record<number, { half: number; h: number; tail: number; back?: boolean }> = {
+  3: { half: 14, h: 3.6, tail: 5 },
+  4: { half: 16, h: 4, tail: 6.5 },
+  5: { half: 17.5, h: 4.3, tail: 7.5 },
+  6: { half: 19, h: 4.6, tail: 8.5 },
+  7: { half: 20.5, h: 4.9, tail: 9.5, back: true },
+  8: { half: 22, h: 5.2, tail: 11, back: true },
+  9: { half: 24, h: 5.6, tail: 12, back: true },
+};
+function bannerPaths(half: number, h: number, tail: number, y: number, sag = 2.4) {
+  const band = `M${-half} ${y - h} Q0 ${y - h + sag} ${half} ${y - h} L${half} ${y + h} Q0 ${y + h + sag} ${-half} ${y + h} Z`;
+  const end = (g: 1 | -1) => {
+    const x0 = g * (half - 1.5), x1 = g * (half + tail), xn = g * (half + tail * 0.55);
+    return `M${x0} ${y - h + 2} L${x1} ${y - h + 2.6} L${xn} ${y + 1.6} L${x1} ${y + h + 4.2} L${x0} ${y + h + 2.6} Z`;
+  };
+  const fold = (g: 1 | -1) => `M${g * half} ${y - h} L${g * half} ${y + h} L${g * (half - 1.5)} ${y + h + 2.6} L${g * (half - 1.5)} ${y - h + 2} Z`;
+  return { band, ends: [end(1), end(-1)], folds: [fold(1), fold(-1)] };
+}
 function spikeRing(n: number, len: number, w: number, open = 38) {
   return Array.from({ length: n }, (_, i) => {
     const a = open + ((360 - 2 * open) * (i + 0.5)) / n;
     const rad = (a * Math.PI) / 180;
     // longest at the sides and the bottom point, a little shorter between
-    const L = len * (0.72 + 0.28 * Math.abs(Math.sin(rad)) + (Math.abs(a - 180) < 14 ? 0.08 : 0));
+    const L = len * (0.72 + 0.28 * Math.abs(Math.sin(rad)) );
     // a curved thorn: one edge bowed, the other straight, so the ring looks like it spins
     return { a, d: `M${-w} 0 Q${-w * 0.2} ${-L * 0.45} 0 ${-L} L${w * 0.35} ${-L * 0.55} Q${w * 0.6} ${-L * 0.25} ${w} 0 Z` };
   });
@@ -264,7 +287,7 @@ export function RankBadge({ rank, size = 44 }: { rank: Rank; size?: number }) {
         </linearGradient>
       </defs>
 
-      <g transform={`translate(32 ${(41 + t * 0.2 - Math.max(0, t - 6) * 1.6).toFixed(1)}) scale(${SCALE[t]})`} filter={`url(#${id('shadow')})`}>
+      <g transform={`translate(32 ${(40 + t * 0.1).toFixed(1)}) scale(${SCALE[t]})`} filter={`url(#${id('shadow')})`}>
         {/* Wings, mirrored */}
         {wings.length > 0 && [1, -1].map((side) => (
           <g key={side} transform={`scale(${side} 1)`}>
@@ -321,7 +344,7 @@ export function RankBadge({ rank, size = 44 }: { rank: Rank; size?: number }) {
         <g transform={`translate(0 ${(-26.5 - 1.5 * (t / 9)).toFixed(2)}) scale(${(FIG_K * (0.86 + 0.14 * (t / 9))).toFixed(3)})`}>
           <Lifter m={t / 9} classical={t === 9} fill={`url(#${id('fig')})`} outline={t === 9 ? '#5c4310' : mix(c, CHARCOAL, 0.75)} line={t === 9 ? '#7a5a18' : light} wreath="#3f7a3a"
             crown={t === 7 || t === 8 ? { points: t === 7 ? 3 : 5, fill: `url(#${id('trim')})`, stroke: trim.dark } : null}
-            pauldron={t >= 6 ? { n: t - 3, len: 3 + (t - 6) * 1.9, fill: `url(#${id('trim')})`, stroke: trim.dark } : null} />
+            pauldron={t >= 7 ? { n: t - 5, len: 2.4 + (t - 7) * 1, fill: `url(#${id('trim')})`, stroke: trim.dark } : null} />
         </g>
 
         {/* Plate */}
@@ -355,6 +378,35 @@ export function RankBadge({ rank, size = 44 }: { rank: Rank; size?: number }) {
             <circle cx="0" cy="0" r="1.5" fill="#fff" />
           </g>
         )}
+
+        {/* Banner across the foot of the shield */}
+        {BANNER[t] && (() => {
+          const B = BANNER[t];
+          const y = 16.5;
+          const front = bannerPaths(B.half, B.h, B.tail, y, 3.4);
+          const back = B.back ? bannerPaths(B.half + 3, B.h + 1, B.tail + 4, y + 4, 4) : null;
+          const ribbon = t === 9 ? `url(#${id('royal')})` : `url(#${id('rim')})`;
+          const edge = t >= 8 ? gold : lighter;
+          return (
+            <g>
+              {back && (
+                <g fill={`url(#${id('trim')})`} stroke={trim.dark} strokeOpacity="0.6" strokeWidth="0.5">
+                  {back.ends.map((d, i) => <path key={i} d={d} />)}
+                </g>
+              )}
+              <g fill={t === 9 ? '#a8302a' : dark} stroke={t === 9 ? '#6e1b16' : darker} strokeOpacity="0.7" strokeWidth="0.5">
+                {front.ends.map((d, i) => <path key={i} d={d} />)}
+              </g>
+              <g fill={t === 9 ? '#6e1b16' : darker}>{front.folds.map((d, i) => <path key={i} d={d} />)}</g>
+              <path d={front.band} fill={ribbon} stroke={t >= 8 ? goldDark : darker} strokeOpacity="0.7" strokeWidth="0.6" />
+              <path d={`M${-B.half + 1} ${y - B.h + 0.9} Q0 ${y - B.h + 4.3} ${B.half - 1} ${y - B.h + 0.9} M${-B.half + 1} ${y + B.h - 0.9} Q0 ${y + B.h + 2.5} ${B.half - 1} ${y + B.h - 0.9}`}
+                fill="none" stroke={edge} strokeOpacity={t >= 8 ? 0.95 : 0.6} strokeWidth={t >= 8 ? 0.8 : 0.5} />
+              {t >= 6 && [-1, 0, 1].map((k) => (
+                <path key={k} d="M0 -2 L2 0 L0 2 L-2 0 Z" transform={`translate(${k * B.half * 0.42} ${y + 1.7 + (k === 0 ? 0.6 : 0.3)})`} fill={t >= 8 ? gold : lighter} stroke={t >= 8 ? goldDark : darker} strokeWidth="0.3" />
+              ))}
+            </g>
+          );
+        })()}
 
         {/* Metallic sheen sweeping across the top two tiers */}
         {t >= 8 && (
