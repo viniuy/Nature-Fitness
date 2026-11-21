@@ -20,7 +20,7 @@ import type { Rank } from '@/lib/ranks';
  * metallic sheen on the top two tiers, not from blur.
  */
 
-const SCALE = [0.56, 0.6, 0.63, 0.65, 0.66, 0.66, 0.65, 0.63, 0.6, 0.57];
+const SCALE = [0.56, 0.6, 0.63, 0.65, 0.62, 0.6, 0.58, 0.56, 0.54, 0.52];
 const CHARCOAL = '#17181a';
 
 function mix(a: string, b: string, t: number) {
@@ -38,6 +38,18 @@ const PLATES = [
   'M0 -15 L6 -18 L17 -21 L14 -10 L17 -6 L13 -2 L13 5 L6 13 L0 23 L-6 13 L-13 5 L-13 -2 L-17 -6 L-14 -10 L-17 -21 L-6 -18 Z',
   'M0 -14 L5 -18 L18 -23 L14 -11 L18 -7 L13 -3 L14 4 L9 8 L7 14 L0 25 L-7 14 L-9 8 L-14 4 L-13 -3 L-18 -7 L-14 -11 L-18 -23 L-5 -18 Z',
 ];
+// From Platinum up the shield widens into a crest that reaches out under the
+// wings, with a jagged three-point foot (vince's sketch); wider every tier.
+const WIDE_LEFT: [number, number][] = [
+  [0, -14], [-6, -18], [-17, -17], [-29, -23], [-25, -12], [-21, -7], [-24, -3], [-18, 3],
+  [-15, 11], [-12, 17], [-9, 21], [-13, 33], [-5.5, 27], [0, 38],
+];
+function widePlate(wf: number) {
+  const left = WIDE_LEFT.map(([x, y]) => [x * wf, y]);
+  const right = [...left].reverse().slice(1, -1).map(([x, y]) => [-x, y]);
+  return 'M' + [...left, ...right].map(([x, y]) => `${x.toFixed(2)} ${y}`).join(' L') + ' Z';
+}
+const WIDTH = [0, 0, 0, 0, 0.72, 0.82, 0.92, 1.08, 1.2, 1.32];
 const PLATE_FOR = [0, 1, 2, 2, 3, 3, 3, 4, 4, 4];
 const FIG_K = 1.65;
 
@@ -85,22 +97,22 @@ interface Wing { n: number; from: number; to: number; len: [number, number]; w: 
 // Raised wings growing out from behind the lifter's shoulders: blades fan from
 // pointing out sideways to pointing up, longest near the upper tip.
 const WINGS: Record<number, Wing[]> = {
-  4: [{ n: 4, from: 168, to: 222, len: [10, 15], w: 4, at: [-10, -19] }],
-  5: [{ n: 5, from: 164, to: 226, len: [12, 19], w: 4.4, at: [-10, -20] }],
-  6: [{ n: 6, from: 160, to: 230, len: [14, 24], w: 4.8, at: [-10, -21] }],
+  4: [{ n: 4, from: 168, to: 222, len: [10, 15], w: 4, at: [-15, -19.0] }],
+  5: [{ n: 5, from: 164, to: 226, len: [12, 19], w: 4.4, at: [-15, -20.0] }],
+  6: [{ n: 6, from: 160, to: 230, len: [14, 24], w: 4.8, at: [-15, -21.0] }],
   7: [
-    { n: 7, from: 156, to: 234, len: [18, 32], w: 5.4, at: [-10, -22] },
-    { n: 5, from: 166, to: 222, len: [12, 19], w: 4.8, at: [-11, -20] },
+    { n: 7, from: 156, to: 234, len: [18, 32], w: 5.4, at: [-15, -22.0] },
+    { n: 5, from: 166, to: 222, len: [12, 19], w: 4.8, at: [-16, -20.0] },
   ],
   8: [
-    { n: 8, from: 152, to: 238, len: [22, 40], w: 6, at: [-10, -23] },
-    { n: 6, from: 162, to: 228, len: [16, 27], w: 5.4, at: [-11, -21] },
-    { n: 5, from: 172, to: 218, len: [10, 16], w: 4.8, at: [-12, -19] },
+    { n: 8, from: 152, to: 238, len: [22, 40], w: 6, at: [-15, -23.0] },
+    { n: 6, from: 162, to: 228, len: [16, 27], w: 5.4, at: [-16, -21.0] },
+    { n: 5, from: 172, to: 218, len: [10, 16], w: 4.8, at: [-17, -19.0] },
   ],
   9: [
-    { n: 9, from: 148, to: 242, len: [27, 52], w: 6.6, at: [-10, -24] },
-    { n: 7, from: 158, to: 232, len: [19, 36], w: 6, at: [-11, -22] },
-    { n: 6, from: 168, to: 222, len: [12, 22], w: 5.4, at: [-12, -20] },
+    { n: 9, from: 148, to: 242, len: [27, 52], w: 6.6, at: [-15, -24.0] },
+    { n: 7, from: 158, to: 232, len: [19, 36], w: 6, at: [-16, -22.0] },
+    { n: 6, from: 168, to: 222, len: [12, 22], w: 5.4, at: [-17, -20.0] },
   ],
 };
 
@@ -219,7 +231,7 @@ export function RankBadge({ rank, size = 44 }: { rank: Rank; size?: number }) {
   const goldLight = '#fff1b8';
   const goldDark = '#a8741a';
   const glow = 'glow' in rank && rank.glow;
-  const body = PLATES[PLATE_FOR[t]];
+  const body = t >= 4 ? widePlate(WIDTH[t]) : PLATES[PLATE_FOR[t]];
   const id = (s: string) => `${s}-${uid}`;
 
   // Crown and wing trim are gold from Grandmaster up; Master keeps its own colour.
@@ -367,6 +379,7 @@ export function RankBadge({ rank, size = 44 }: { rank: Rank; size?: number }) {
         </g>
 
         {/* Tier mark on the face */}
+        <g transform={t >= 4 ? 'translate(0 3)' : undefined}>
         {t === 1 && <path d="M0 -4 L3.4 0 L0 4 L-3.4 0 Z" fill={light} stroke={darker} strokeOpacity="0.5" strokeWidth="0.6" />}
         {(t === 2 || t === 3) && (
           <g fill="none" stroke={rank.ink} strokeWidth="2.6" strokeLinecap="square" strokeLinejoin="miter" opacity="0.85">
@@ -388,6 +401,7 @@ export function RankBadge({ rank, size = 44 }: { rank: Rank; size?: number }) {
             <circle cx="0" cy="0" r="1.5" fill="#fff" />
           </g>
         )}
+        </g>
 
         {/* Metallic sheen sweeping across the top two tiers */}
         {t >= 4 && (
