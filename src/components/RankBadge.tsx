@@ -2,18 +2,15 @@ import { useId } from 'react';
 import type { Rank } from '@/lib/ranks';
 
 /**
- * Rank emblems, drawn here (no image files). Each step up the ladder adds
- * something, so a higher rank reads as more elite at a glance:
- *   Iron      small plain hex plate
- *   Bronze    hex plate with a bevelled rim
- *   Silver    shield with one rising chevron
- *   Gold      two chevrons and side flanges
- *   Platinum  faceted shield with a cut gem
- *   Emerald   emerald-cut gem and laurel leaves
- *   Diamond   brilliant-cut gem, fuller laurel, top spike
- *   Master    feathered wings and a three-point crown
- *   Grandmaster  bigger double wings, five-point crown, glow
- *   Champion  triple gold wings, tall jewelled crown, star gem, rays and sparkles
+ * Rank emblems, drawn here (no image files). A lifter stands behind an
+ * angular shield, flexing over it, and every tier up the lifter gains muscle
+ * and the shield gets sharper:
+ *   Iron, Bronze    kite plates, skinny lifter
+ *   Silver, Gold    notched shields with chevrons
+ *   Platinum to Diamond  shoulder-horned crest, cut gem, laurel from Emerald
+ *   Master, Grandmaster  blade-edged crest, wings, a crown on the lifter
+ *   Champion  a golden hero statue with laurel wreath and red cape, royal blue
+ *             face with a star gem, gold rays, triple wings and glints
  * The emblem also grows inside its box, so lower tiers look smaller.
  *
  * Styling follows the Taste rules: one material for every tier (a metal bezel
@@ -23,7 +20,7 @@ import type { Rank } from '@/lib/ranks';
  * metallic sheen on the top two tiers, not from blur.
  */
 
-const SCALE = [0.6, 0.66, 0.72, 0.76, 0.78, 0.78, 0.8, 0.8, 0.84, 0.88];
+const SCALE = [0.56, 0.6, 0.63, 0.65, 0.67, 0.67, 0.69, 0.69, 0.71, 0.73];
 const CHARCOAL = '#17181a';
 
 function mix(a: string, b: string, t: number) {
@@ -32,8 +29,17 @@ function mix(a: string, b: string, t: number) {
   return '#' + x.map((v, i) => Math.round(v + (y[i] - v) * t).toString(16).padStart(2, '0')).join('');
 }
 
-const HEX = 'M0 -17 L15 -8.5 L15 8.5 L0 17 L-15 8.5 L-15 -8.5 Z';
-const SHIELD = 'M0 -20 L15 -14.5 L15 1 C15 10.5 8.5 16.5 0 21 C-8.5 16.5 -15 10.5 -15 1 L-15 -14.5 Z';
+// Angular plates that get sharper every few tiers: a kite, then clipped
+// corners, notched sides, shoulder horns, then a blade-edged crest with a long spike.
+const PLATES = [
+  'M0 -15 L13 -11 L13 5 L0 18 L-13 5 L-13 -11 Z',
+  'M-5 -16 L5 -16 L14 -11 L14 4 L0 19 L-14 4 L-14 -11 Z',
+  'M0 -15 L6 -18 L15 -18 L14 -9 L16 -6 L13 -2 L13 5 L0 21 L-13 5 L-13 -2 L-16 -6 L-14 -9 L-15 -18 L-6 -18 Z',
+  'M0 -15 L6 -18 L17 -21 L14 -10 L17 -6 L13 -2 L13 5 L6 13 L0 23 L-6 13 L-13 5 L-13 -2 L-17 -6 L-14 -10 L-17 -21 L-6 -18 Z',
+  'M0 -14 L5 -18 L18 -23 L14 -11 L18 -7 L13 -3 L14 4 L9 8 L7 14 L0 25 L-7 14 L-9 8 L-14 4 L-13 -3 L-18 -7 L-14 -11 L-18 -23 L-5 -18 Z',
+];
+const PLATE_FOR = [0, 1, 2, 2, 3, 3, 3, 4, 4, 4];
+const FIG_K = 1.65;
 
 /** A path scaled about the origin, for the inner face of the plate. */
 function scalePath(d: string, k: number) {
@@ -66,87 +72,90 @@ const WINGS: Record<number, Wing[]> = {
 };
 
 /**
- * A front-facing lifter flexing both arms, as one silhouette. `m` runs from 0
- * (Iron: narrow shoulders, thin arms) to 1 (Champion: wide V-taper, big
- * biceps, traps, abs). `classical` dresses the Champion like a statue from the
- * age of myths: marble, a laurel wreath and a cape fastened with gold clasps.
+ * A lifter in a front double-biceps pose, drawn as one silhouette with an
+ * outline. `m` runs from 0 (Iron: narrow shoulders, thin arms) to 1
+ * (Champion: wide shoulders, big peaked biceps, heavy traps). `classical`
+ * dresses the Champion as a statue from the age of myths: a laurel wreath
+ * and a red cape fastened with gold clasps.
  */
-function Lifter({ m, classical, fill, line, edge, wreath }: { m: number; classical: boolean; fill: string; line: string; edge: string; wreath: string }) {
-  const k = 0.82 + 0.06 * m; // figure grows a little too
-  const S = 4.4 + 2.7 * m; // half shoulder width
-  const W = 3.4 + 0.5 * m; // half waist width
-  const delt = 1.5 + 1.5 * m;
-  const arm = 1.5 + 1.3 * m; // upper-arm half thickness
-  const bi = 0.6 + 1.9 * m; // biceps peak
-  const fore = 1.5 + 0.8 * m;
-  const ey = -4.6; // elbow height
-  const ex = S + 3.9 + 0.8 * m;
-  const fx = ex - 0.5, fy = -10.8;
-  const neck = 1.4 + 1.1 * m;
-  const trap = 0.8 + 1.4 * m;
-  const sh = -4.8; // shoulder line
-  const side = (x: number) => x; // left side uses mirrored coordinates
-  const half = (sgn: 1 | -1) => {
-    const X = (x: number) => (sgn * side(x)).toFixed(2);
-    return (
-      <g key={sgn}>
-        {/* deltoid */}
-        <circle cx={X(S)} cy={sh + 0.4} r={delt} />
-        {/* upper arm with a biceps peak on top */}
-        <path d={`M${X(S - 0.5)} ${sh - arm + 0.6} Q${X((S + ex) / 2)} ${ey - arm - bi} ${X(ex)} ${ey - fore} L${X(ex + 0.4)} ${ey + arm * 0.7} Q${X((S + ex) / 2)} ${ey + arm + 0.3} ${X(S - 0.5)} ${sh + arm + 0.6} Z`} />
-        {/* forearm up to the fist */}
-        <path d={`M${X(ex - fore)} ${ey} L${X(fx - fore * 0.8)} ${fy} L${X(fx + fore * 0.8)} ${fy} L${X(ex + fore * 0.9)} ${ey + 0.6} Z`} />
-        <circle cx={X(fx)} cy={fy - 0.4} r={1.6 + 0.5 * m} />
-      </g>
-    );
+function Lifter({ m, classical, fill, outline, line, wreath, crown }: {
+  m: number; classical: boolean; fill: string; outline: string; line: string; wreath: string;
+  crown: { points: number; fill: string; stroke: string } | null;
+}) {
+  const sh = 0; // shoulder line
+  const S = 4.2 + 3 * m; // half shoulder width
+  const delt = 1.4 + 1.4 * m;
+  const arm = 1.1 + 1 * m; // upper-arm half thickness
+  const bi = 0.8 + 2.6 * m; // biceps peak height
+  const fore = 1.1 + 0.7 * m;
+  const ex = S + 4.2 + 1.6 * m; // elbow
+  const ey = sh + 0.6;
+  const fy = sh - 6.6 - 0.8 * m; // fist height
+  const fist = 1.3 + 0.5 * m;
+  const neck = 1.3 + 1 * m;
+  const trap = 0.6 + 1.8 * m;
+  const W = 3.4 + 0.6 * m;
+  const headY = sh - 6.4;
+
+  const armPath = (g: 1 | -1) => {
+    const X = (x: number) => (g * x).toFixed(2);
+    const mid = (S + ex) / 2;
+    return `M${X(S - 1)} ${sh + arm + 1}`
+      + ` C${X(mid)} ${ey + arm + 0.8} ${X(ex)} ${ey + arm + 0.4} ${X(ex + fore * 0.9)} ${ey + arm * 0.4}` // under the arm to the elbow
+      + ` C${X(ex + fore * 1.7)} ${ey - 2} ${X(ex + fore * 1.1)} ${fy + 2.6} ${X(ex + fore * 0.7)} ${fy + 1}` // outer forearm
+      + ` L${X(ex - fore * 0.9)} ${fy + 1}` // across the wrist
+      + ` C${X(ex - fore * 0.9)} ${fy + 3} ${X(ex - fore * 1.2)} ${ey - arm - 0.6} ${X(ex - fore * 1.3)} ${ey - arm}` // inner forearm
+      + ` C${X(ex - 2)} ${ey - arm - bi * 1.5} ${X(mid - 0.6)} ${ey - arm - bi * 1.5} ${X(S + 0.4)} ${sh - delt + 0.2}` // biceps peak
+      + ` Z`;
   };
-  const body = () => (
+  const shapes = (
     <>
-        {/* head and neck */}
-        <ellipse cx="0" cy={-11} rx={2.5} ry={2.9} />
-        <rect x={-neck} y={-9} width={neck * 2} height={4.6} />
-        {/* traps */}
-        <path d={`M${-neck} ${-7.6} L${-S + 0.6} ${sh - 0.4} L${S - 0.6} ${sh - 0.4} L${neck} ${-7.6} Q0 ${-7.6 - trap * 0.25} ${-neck} ${-7.6} Z`} />
-        <path d={`M${-neck - 0.2} ${-8.2 + trap * 0.2} Q${-S * 0.55} ${-7.2 - trap * 0.3} ${-S + 0.4} ${sh - 0.6} L${S - 0.4} ${sh - 0.6} Q${S * 0.55} ${-7.2 - trap * 0.3} ${neck + 0.2} ${-8.2 + trap * 0.2} Z`} />
-        {/* torso: shoulders down to a narrower waist, then hips */}
-        <path d={`M${-S} ${sh} L${S} ${sh} Q${S - 0.2} ${2 - 2 * m} ${W} ${8} L${W + 0.9} ${14} L${-W - 0.9} ${14} L${-W} ${8} Q${-S + 0.2} ${2 - 2 * m} ${-S} ${sh} Z`} />
-        {half(1)}
-        {half(-1)}
+      <ellipse cx="0" cy={headY} rx={2.3} ry={2.7} />
+      <rect x={-neck} y={headY + 1.4} width={neck * 2} height={4.4} />
+      <path d={`M${-neck} ${headY + 3.2} C${-S * 0.5} ${sh - trap - 1} ${-S} ${sh - 1.4} ${-S - 0.4} ${sh + 0.6} L${S + 0.4} ${sh + 0.6} C${S} ${sh - 1.4} ${S * 0.5} ${sh - trap - 1} ${neck} ${headY + 3.2} Z`} />
+      {[1, -1].map((g) => <circle key={g} cx={g * S} cy={sh + 0.6} r={delt} />)}
+      <path d={`M${-S - 0.4} ${sh} L${S + 0.4} ${sh} Q${S} ${sh + 5 - 2 * m} ${W} ${sh + 11} L${W + 0.6} ${sh + 18} L${-W - 0.6} ${sh + 18} L${-W} ${sh + 11} Q${-S} ${sh + 5 - 2 * m} ${-S - 0.4} ${sh} Z`} />
+      {[1, -1].map((g) => <path key={g} d={armPath(g as 1 | -1)} />)}
+      {[1, -1].map((g) => <circle key={g} cx={g * (ex - fore * 0.1)} cy={fy} r={fist} />)}
     </>
   );
   return (
-    <g transform={`translate(0 1.4) scale(${k})`}>
+    <g>
       {classical && (
         <g>
-          <path d={`M${-S + 0.6} ${sh - 0.4} C${-S - 3} ${2} ${-S - 6} ${10} ${-S - 7} ${17} L${S + 7} ${17} C${S + 6} ${10} ${S + 3} ${2} ${S - 0.6} ${sh - 0.4} Z`} fill="#a8302a" />
-          <path d={`M${-S - 1} ${2} Q${-S - 3} ${10} ${-S - 4.4} ${17} M${S + 1} ${2} Q${S + 3} ${10} ${S + 4.4} ${17}`} fill="none" stroke="#6e1b16" strokeWidth="0.5" strokeOpacity="0.7" />
+          <path d={`M${-S + 0.6} ${sh - 0.4} C${-S - 4} ${6} ${-S - 7} ${14} ${-S - 8} ${22} L${S + 8} ${22} C${S + 7} ${14} ${S + 4} ${6} ${S - 0.6} ${sh - 0.4} Z`} fill="#a8302a" stroke="#6e1b16" strokeWidth="0.4" />
+          <path d={`M${-S - 1.5} ${6} Q${-S - 4} ${14} ${-S - 5} ${22} M${S + 1.5} ${6} Q${S + 4} ${14} ${S + 5} ${22}`} fill="none" stroke="#6e1b16" strokeWidth="0.5" strokeOpacity="0.7" />
         </g>
       )}
-      <g fill={edge} transform="translate(0 -0.5)" opacity="0.9">{body()}</g>
-      <g fill={fill}>{body()}</g>
+      {/* outline first, then the fill on top, so overlapping parts read as one body */}
+      <g fill={outline} stroke={outline} strokeWidth="1.1" strokeLinejoin="round">{shapes}</g>
+      <g fill={fill}>{shapes}</g>
 
-      {/* muscle lines, only once there is muscle to show */}
-      <g fill="none" stroke={line} strokeOpacity={0.25 + 0.25 * m} strokeWidth="0.55" strokeLinecap="round">
-        {m > 0.2 && <path d={`M${-S + 1.2} ${-2.6 + 0.6 * m} Q${-S * 0.4} ${0.4 + 1.2 * m} 0 ${-0.6 + m} Q${S * 0.4} ${0.4 + 1.2 * m} ${S - 1.2} ${-2.6 + 0.6 * m}`} />}
-        {m > 0.2 && <path d={`M0 ${-3.6} L0 ${10}`} />}
-        {m > 0.5 && [3, 5.6, 8].map((y) => <path key={y} d={`M${-W + 1} ${y} L${W - 1} ${y}`} />)}
-        {m > 0.65 && [1, -1].map((g) => <path key={g} d={`M${g * (S + 1.4)} ${ey - arm * 0.2} Q${g * ((S + ex) / 2)} ${ey - arm * 0.4 - bi * 0.6} ${g * (ex - 0.6)} ${ey - fore * 0.6}`} />)}
+      {/* muscle lines, once there is muscle to show */}
+      <g fill="none" stroke={line} strokeOpacity={0.35 + 0.3 * m} strokeWidth="0.45" strokeLinecap="round">
+        {m > 0.3 && [1, -1].map((g) => <path key={g} d={`M${g * (S + 1.2)} ${ey - arm * 0.2} Q${g * ((S + ex) / 2)} ${ey - arm - bi * 0.7} ${g * (ex - fore * 1.1)} ${ey - arm * 0.6}`} />)}
+        {m > 0.2 && <path d={`M${-S + 1.4} ${sh + 2.6} Q${-S * 0.4} ${sh + 4.4 + m} 0 ${sh + 3.4 + m} Q${S * 0.4} ${sh + 4.4 + m} ${S - 1.4} ${sh + 2.6}`} />}
+        {m > 0.55 && [1, -1].map((g) => <path key={g} d={`M${g * neck * 0.9} ${headY + 3.6} Q${g * S * 0.45} ${sh - trap * 0.6} ${g * (S - 1)} ${sh - 0.6}`} />)}
       </g>
 
+      {crown && (
+        <path d={crown.points === 3
+          ? `M-2.4 ${headY - 2} L-2.8 ${headY - 5.2} L-1.2 ${headY - 3.8} L0 ${headY - 6.4} L1.2 ${headY - 3.8} L2.8 ${headY - 5.2} L2.4 ${headY - 2} Z`
+          : `M-2.8 ${headY - 2} L-3.4 ${headY - 5.6} L-1.9 ${headY - 4.2} L-1 ${headY - 6.8} L0 ${headY - 4.6} L1 ${headY - 6.8} L1.9 ${headY - 4.2} L3.4 ${headY - 5.6} L2.8 ${headY - 2} Z`}
+          fill={crown.fill} stroke={crown.stroke} strokeWidth="0.3" />
+      )}
       {classical && (
         <g>
-          {/* laurel wreath: gold leaves up both sides of the head, tips meeting at the brow */}
           {[1, -1].map((g) => (
             <g key={g} transform={`scale(${g} 1)`}>
-              {[120, 150, 180, 210, 240].map((a, i) => {
+              {[125, 155, 185, 215, 245].map((a, i) => {
                 const rad = (a * Math.PI) / 180;
-                const x = 2.75 * Math.cos(rad), y = -11 + 3.1 * Math.sin(rad);
-                return <path key={i} d={leaf(2.3, 0.95)} fill={wreath} stroke="#8a6414" strokeWidth="0.2" transform={`translate(${x.toFixed(2)} ${y.toFixed(2)}) rotate(${a + 90})`} />;
+                const x = 2.6 * Math.cos(rad), y = headY + 3 * Math.sin(rad);
+                return <path key={i} d={leaf(2.2, 0.9)} fill={wreath} stroke="#5c4310" strokeWidth="0.2" transform={`translate(${x.toFixed(2)} ${y.toFixed(2)}) rotate(${a + 90})`} />;
               })}
             </g>
           ))}
-          <circle cx={-S + 0.6} cy={sh - 0.2} r="0.9" fill={wreath} stroke="#8a6414" strokeWidth="0.25" />
-          <circle cx={S - 0.6} cy={sh - 0.2} r="0.9" fill={wreath} stroke="#8a6414" strokeWidth="0.25" />
+          {[1, -1].map((g) => <circle key={g} cx={g * (S - 0.4)} cy={sh - 0.2} r="0.9" fill="#f6d77a" stroke="#5c4310" strokeWidth="0.25" />)}
         </g>
       )}
     </g>
@@ -165,7 +174,7 @@ export function RankBadge({ rank, size = 44 }: { rank: Rank; size?: number }) {
   const goldLight = '#fff1b8';
   const goldDark = '#a8741a';
   const glow = 'glow' in rank && rank.glow;
-  const body = t <= 1 ? HEX : SHIELD;
+  const body = PLATES[PLATE_FOR[t]];
   const id = (s: string) => `${s}-${uid}`;
 
   // Crown and wing trim are gold from Grandmaster up; Master keeps its own colour.
@@ -201,11 +210,12 @@ export function RankBadge({ rank, size = 44 }: { rank: Rank; size?: number }) {
         <filter id={id('shadow')} x="-30%" y="-30%" width="160%" height="170%">
           <feDropShadow dx="0" dy="1.6" stdDeviation="1.4" floodColor={darker} floodOpacity="0.32" />
         </filter>
-        <mask id={id('facemask')} maskUnits="userSpaceOnUse" x="-40" y="-40" width="80" height="80"><path d={scalePath(body, t === 0 ? 0.86 : 0.78)} fill="#fff" /></mask>
+        <mask id={id('facemask')} maskUnits="userSpaceOnUse" x="-40" y="-40" width="80" height="80"><path d={scalePath(body, 0.74)} fill="#fff" /></mask>
         <mask id={id('platemask')} maskUnits="userSpaceOnUse" x="-40" y="-40" width="80" height="80"><path d={body} fill="#fff" /></mask>
-        <linearGradient id={id('fig')} x1="0" y1="0" x2="0.4" y2="1">
-          <stop offset="0" stopColor={t === 9 ? '#fffdf6' : dark} />
-          <stop offset="1" stopColor={t === 9 ? '#d9caa4' : darker} />
+        <linearGradient id={id('fig')} x1="0" y1="0" x2="0.25" y2="1">
+          <stop offset="0" stopColor={t === 9 ? '#fff0b8' : mix(c, '#ffffff', 0.12)} />
+          <stop offset="0.6" stopColor={t === 9 ? '#e0b04a' : mix(c, CHARCOAL, 0.3)} />
+          <stop offset="1" stopColor={t === 9 ? '#9c6c1c' : mix(c, CHARCOAL, 0.5)} />
         </linearGradient>
         <radialGradient id={id('royal')} cx="50%" cy="30%" r="80%">
           <stop offset="0" stopColor="#3a4f96" />
@@ -218,7 +228,7 @@ export function RankBadge({ rank, size = 44 }: { rank: Rank; size?: number }) {
         </linearGradient>
       </defs>
 
-      <g transform={`translate(32 ${t >= 7 ? 34 : 32}) scale(${SCALE[t]})`} filter={`url(#${id('shadow')})`}>
+      <g transform={`translate(32 ${(41 + t * 0.2).toFixed(1)}) scale(${SCALE[t]})`} filter={`url(#${id('shadow')})`}>
         {/* Wings, mirrored */}
         {wings.length > 0 && [1, -1].map((side) => (
           <g key={side} transform={`scale(${side} 1)`}>
@@ -247,56 +257,50 @@ export function RankBadge({ rank, size = 44 }: { rank: Rank; size?: number }) {
           </g>
         ))}
 
-        {/* Side flanges */}
-        {(t === 3 || t === 4) && [1, -1].map((side) => (
-          <path key={side} transform={`scale(${side} 1)`} d="M14 -12 L21 -7 L14 -1 Z" fill={`url(#${id('rim')})`} stroke={darker} strokeOpacity="0.4" strokeWidth="0.6" />
-        ))}
-
-        {/* Top spike */}
-        {t === 6 && <path d="M-5 -18 L0 -27 L5 -18 Z" fill={`url(#${id('rim')})`} stroke={darker} strokeOpacity="0.4" strokeWidth="0.6" />}
-
-        {/* Crown */}
-        {t === 7 && (
-          <path d="M-9 -18 L-10 -26 L-4.5 -22 L0 -29 L4.5 -22 L10 -26 L9 -18 Z" fill={`url(#${id('trim')})`} stroke={trim.dark} strokeOpacity="0.6" strokeWidth="0.6" />
-        )}
-        {t === 8 && (
-          <path d="M-11 -18 L-13 -27 L-7.5 -23 L-4 -30 L0 -24 L4 -30 L7.5 -23 L13 -27 L11 -18 Z" fill={`url(#${id('trim')})`} stroke={trim.dark} strokeOpacity="0.6" strokeWidth="0.6" />
-        )}
+        {/* Champion: gold rays fanning out behind everything */}
         {t === 9 && (
-          <g>
-            <path d="M-12 -18 L-14 -30 L-8 -25 L-4.5 -34 L0 -27 L4.5 -34 L8 -25 L14 -30 L12 -18 Z" fill={`url(#${id('trim')})`} stroke={goldDark} strokeOpacity="0.7" strokeWidth="0.6" />
-            {[[-14, -30], [-4.5, -34], [4.5, -34], [14, -30]].map(([x, y], i) => (
-              <circle key={i} cx={x} cy={y} r="1.7" fill="#fffbe6" stroke={goldDark} strokeWidth="0.4" />
+          <g opacity="0.85">
+            {Array.from({ length: 14 }, (_, i) => (
+              <path key={i} d="M0 -14 L-1.3 -44 L1.3 -44 Z" fill={`url(#${id('trim')})`} fillOpacity={i % 2 ? 0.35 : 0.65} transform={`rotate(${-91 + i * 14} 0 -14)`} />
             ))}
-            <path d="M0 -23.5 L1.8 -21 L0 -18.5 L-1.8 -21 Z" fill="#e85a4f" />
           </g>
         )}
+
+        {/* The lifter stands behind the shield, flexing over it, bigger every tier */}
+        <g transform={`translate(0 ${(-26.5 - 1.5 * (t / 9)).toFixed(2)}) scale(${(FIG_K * (0.86 + 0.14 * (t / 9))).toFixed(3)})`}>
+          <Lifter m={t / 9} classical={t === 9} fill={`url(#${id('fig')})`} outline={t === 9 ? '#5c4310' : mix(c, CHARCOAL, 0.75)} line={t === 9 ? '#7a5a18' : light} wreath="#3f7a3a"
+            crown={t === 7 || t === 8 ? { points: t === 7 ? 3 : 5, fill: `url(#${id('trim')})`, stroke: trim.dark } : null} />
+        </g>
 
         {/* Plate */}
         <path d={body} fill={`url(#${id('rim')})`} stroke={darker} strokeOpacity="0.55" strokeWidth="0.8" />
-        <path d={scalePath(body, t === 0 ? 0.86 : 0.78)} fill={`url(#${id('face')})`} />
-        {t >= 4 && <path d={`M0 ${-20 * 0.78} L0 ${21 * 0.78} C${8.5 * 0.78} ${16.5 * 0.78} ${15 * 0.78} ${10.5 * 0.78} ${15 * 0.78} ${1 * 0.78} L${15 * 0.78} ${-14.5 * 0.78} Z`} fill={CHARCOAL} opacity="0.12" />}
-        {t === 0 && <path d={scalePath(HEX, 0.86)} fill="none" stroke={darker} strokeOpacity="0.35" strokeWidth="0.8" />}
-
-        {/* The lifter: a figure in a double-biceps pose that gains muscle every tier */}
-        {t === 9 && (
-          <g mask={`url(#${id('facemask')})`}>
-            <path d={scalePath(body, 0.78)} fill={`url(#${id('royal')})`} />
-            {Array.from({ length: 16 }, (_, i) => (
-              <path key={i} d="M0 -8 L-0.9 -26 L0.9 -26 Z" fill={gold} fillOpacity={i % 2 ? 0.28 : 0.5} transform={`rotate(${i * 22.5} 0 -8)`} />
-            ))}
-          </g>
-        )}
+        <path d={scalePath(body, 0.74)} fill={t === 9 ? `url(#${id('royal')})` : `url(#${id('face')})`} />
+        {/* centre ridge: the right half of the face sits in shadow */}
         <g mask={`url(#${id('facemask')})`}>
-          <Lifter m={t / 9} classical={t === 9} fill={`url(#${id('fig')})`} line={t === 9 ? '#9c8256' : lighter} edge={t === 9 ? '#fff' : light} wreath={gold} />
+          <rect x="0" y="-30" width="30" height="60" fill={CHARCOAL} opacity="0.16" />
+          <path d="M0 -30 L0 30" stroke="#fff" strokeOpacity="0.2" strokeWidth="0.5" />
         </g>
 
-        {/* A small cut gem set into the shield's tip from Platinum to Grandmaster */}
-        {t >= 4 && t <= 8 && (
-          <g transform="translate(0 19.2)">
-            {t === 4 && <path d="M0 -3.4 L2.6 0 L0 3.4 L-2.6 0 Z" fill={`url(#${id('gem')})`} stroke={darker} strokeOpacity="0.6" strokeWidth="0.5" />}
-            {t === 5 && <path d="M-1.6 -3.2 L1.6 -3.2 L2.8 -2 L2.8 2 L1.6 3.2 L-1.6 3.2 L-2.8 2 L-2.8 -2 Z" fill={`url(#${id('gem')})`} stroke={darker} strokeOpacity="0.6" strokeWidth="0.5" />}
-            {t >= 6 && <path d="M-3.4 -1.2 L-1.9 -3.2 L1.9 -3.2 L3.4 -1.2 L0 3.6 Z" fill={`url(#${id('gem')})`} stroke={darker} strokeOpacity="0.6" strokeWidth="0.5" />}
+        {/* Tier mark on the face */}
+        {t === 1 && <path d="M0 -4 L3.4 0 L0 4 L-3.4 0 Z" fill={light} stroke={darker} strokeOpacity="0.5" strokeWidth="0.6" />}
+        {(t === 2 || t === 3) && (
+          <g fill="none" stroke={rank.ink} strokeWidth="2.6" strokeLinecap="square" strokeLinejoin="miter" opacity="0.85">
+            <path d={t === 2 ? 'M-6 4 L0 -2 L6 4' : 'M-6 0 L0 -6 L6 0'} />
+            {t === 3 && <path d="M-6 7 L0 1 L6 7" />}
+          </g>
+        )}
+        {t === 4 && <path d="M0 -8 L5.5 0 L0 8 L-5.5 0 Z" fill={`url(#${id('gem')})`} stroke={darker} strokeOpacity="0.5" strokeWidth="0.6" />}
+        {t === 5 && <path d="M-3.4 -8 L3.4 -8 L6 -5.4 L6 5.4 L3.4 8 L-3.4 8 L-6 5.4 L-6 -5.4 Z" fill={`url(#${id('gem')})`} stroke={darker} strokeOpacity="0.5" strokeWidth="0.6" />}
+        {(t === 6 || t === 7 || t === 8) && (
+          <g>
+            <path d="M-7 -3 L-4 -7 L4 -7 L7 -3 L0 8 Z" fill={`url(#${id('gem')})`} stroke={darker} strokeOpacity="0.5" strokeWidth="0.6" />
+            <path d="M-7 -3 L7 -3 M-4 -7 L-1.8 -3 L0 8 L1.8 -3 L4 -7" fill="none" stroke="#fff" strokeOpacity="0.55" strokeWidth="0.5" />
+          </g>
+        )}
+        {t === 9 && (
+          <g>
+            <path d="M0 -10 L2.4 -2.4 L10 0 L2.4 2.4 L0 10 L-2.4 2.4 L-10 0 L-2.4 -2.4 Z" fill={`url(#${id('gem')})`} stroke={goldDark} strokeOpacity="0.7" strokeWidth="0.6" />
+            <circle cx="0" cy="0" r="1.5" fill="#fff" />
           </g>
         )}
 
@@ -308,7 +312,7 @@ export function RankBadge({ rank, size = 44 }: { rank: Rank; size?: number }) {
         )}
 
         {/* Inner highlight: a 1px refraction edge along the top of the face */}
-        <path d={scalePath(body, 0.78)} fill="none" stroke="#fff" strokeOpacity={t >= 2 ? 0.35 : 0.2} strokeWidth="0.7" />
+        <path d={scalePath(body, 0.74)} fill="none" stroke="#fff" strokeOpacity={t >= 2 ? 0.35 : 0.2} strokeWidth="0.7" />
       </g>
 
       {t === 9 && (
