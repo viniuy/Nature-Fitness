@@ -40,14 +40,38 @@ const PLATES = [
 ];
 // From Platinum up the shield widens into a crest that reaches out under the
 // wings, with a jagged three-point foot (vince's sketch); wider every tier.
-const WIDE_LEFT: [number, number][] = [
+const WIDE_TOP: [number, number][] = [
   [0, -14], [-6, -18], [-17, -17], [-29, -23], [-25, -12], [-21, -7], [-24, -3], [-18, 3],
-  [-15, 11], [-12, 17], [-9, 21], [-13, 33], [-5.5, 27], [0, 38],
+  [-15, 11], [-12, 17],
 ];
-function widePlate(wf: number) {
-  const left = WIDE_LEFT.map(([x, y]) => [x * wf, y]);
-  const right = [...left].reverse().slice(1, -1).map(([x, y]) => [-x, y]);
-  return 'M' + [...left, ...right].map(([x, y]) => `${x.toFixed(2)} ${y}`).join(' L') + ' Z';
+// Smooth foot (Platinum, Emerald) or a foot of rounded points (Diamond up).
+const FOOT_SMOOTH: [number, number][] = [[-8, 23], [0, 33]];
+const FOOT_ROUND: [number, number][] = [[-9, 21], [-13.5, 31], [-5.5, 26.5], [0, 37]];
+
+/** Polygon with every corner rounded by its own radius (a quadratic through the corner). */
+function roundedPath(pts: [number, number][], radius: (i: number) => number) {
+  const n = pts.length;
+  const out: string[] = [];
+  for (let i = 0; i < n; i++) {
+    const [px, py] = pts[(i - 1 + n) % n], [x, y] = pts[i], [nx, ny] = pts[(i + 1) % n];
+    const d1 = Math.hypot(x - px, y - py), d2 = Math.hypot(nx - x, ny - y);
+    const r = Math.min(radius(i), d1 / 2.2, d2 / 2.2);
+    const a = [x + ((px - x) * r) / d1, y + ((py - y) * r) / d1], b = [x + ((nx - x) * r) / d2, y + ((ny - y) * r) / d2];
+    out.push(`${i ? 'L' : 'M'}${a[0].toFixed(2)} ${a[1].toFixed(2)} Q${x.toFixed(2)} ${y.toFixed(2)} ${b[0].toFixed(2)} ${b[1].toFixed(2)}`);
+  }
+  return out.join(' ') + ' Z';
+}
+function widePlate(wf: number, roundFoot: boolean) {
+  const foot = roundFoot ? FOOT_ROUND : FOOT_SMOOTH;
+  const left = [...WIDE_TOP, ...foot].map(([x, y]) => [x * wf, y] as [number, number]);
+  const right = [...left].reverse().slice(1, -1).map(([x, y]) => [-x, y] as [number, number]);
+  const pts = [...left, ...right];
+  const footStart = WIDE_TOP.length - 1;
+  // soft corners everywhere for a cast-metal feel; the foot points get big round tips
+  return roundedPath(pts, (i) => {
+    const j = i < left.length ? i : pts.length - i;
+    return j >= footStart && roundFoot ? 2.4 : 0.9;
+  });
 }
 const WIDTH = [0, 0, 0, 0, 0.72, 0.82, 0.92, 1.08, 1.2, 1.32];
 const PLATE_FOR = [0, 1, 2, 2, 3, 3, 3, 4, 4, 4];
@@ -123,8 +147,8 @@ const WINGS: Record<number, Wing[]> = {
  * dresses the Champion as a statue from the age of myths: a laurel wreath
  * and a red cape fastened with gold clasps.
  */
-function Lifter({ m, classical, fill, outline, line, wreath, crown, pauldron }: {
-  m: number; classical: boolean; fill: string; outline: string; line: string; wreath: string;
+function Lifter({ m, classical, fill, outline, rim, line, wreath, crown, pauldron }: {
+  m: number; classical: boolean; fill: string; outline: string; rim: string; line: string; wreath: string;
   crown: { points: number; fill: string; stroke: string } | null;
   pauldron?: { n: number; len: number; fill: string; stroke: string } | null;
 }) {
@@ -174,7 +198,9 @@ function Lifter({ m, classical, fill, outline, line, wreath, crown, pauldron }: 
         </g>
       )}
       {/* outline first, then the fill on top, so overlapping parts read as one body */}
+      <g fill={outline} transform="translate(0.5 1)" opacity="0.7">{shapes}</g>
       <g fill={outline} stroke={outline} strokeWidth="1.1" strokeLinejoin="round">{shapes}</g>
+      <g fill={rim} transform="translate(-0.35 -0.45)">{shapes}</g>
       <g fill={fill}>{shapes}</g>
 
       {/* spiked shoulder guards on the top tiers */}
@@ -231,7 +257,7 @@ export function RankBadge({ rank, size = 44 }: { rank: Rank; size?: number }) {
   const goldLight = '#fff1b8';
   const goldDark = '#a8741a';
   const glow = 'glow' in rank && rank.glow;
-  const body = t >= 4 ? widePlate(WIDTH[t]) : PLATES[PLATE_FOR[t]];
+  const body = t >= 4 ? widePlate(WIDTH[t], t >= 6) : PLATES[PLATE_FOR[t]];
   const id = (s: string) => `${s}-${uid}`;
 
   // Crown and wing trim are gold from Grandmaster up; Master keeps its own colour.
@@ -281,6 +307,22 @@ export function RankBadge({ rank, size = 44 }: { rank: Rank; size?: number }) {
           <stop offset="0.8" stopColor={trim.base} />
           <stop offset="1" stopColor={trim.dark} />
         </linearGradient>
+        {/* bevel: lit from the top left, shadowed bottom right */}
+        <linearGradient id={id('bevel')} x1="0" y1="0" x2="0.6" y2="1">
+          <stop offset="0" stopColor="#fff" stopOpacity="0.85" />
+          <stop offset="0.45" stopColor="#fff" stopOpacity="0.15" />
+          <stop offset="0.55" stopColor={CHARCOAL} stopOpacity="0.15" />
+          <stop offset="1" stopColor={CHARCOAL} stopOpacity="0.55" />
+        </linearGradient>
+        {/* inset edge of the face: dark on top (it sinks in), light on the bottom lip */}
+        <linearGradient id={id('inset')} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor={CHARCOAL} stopOpacity="0.55" />
+          <stop offset="1" stopColor="#fff" stopOpacity="0.5" />
+        </linearGradient>
+        <radialGradient id={id('spec')} cx="32%" cy="18%" r="55%">
+          <stop offset="0" stopColor="#fff" stopOpacity="0.5" />
+          <stop offset="1" stopColor="#fff" stopOpacity="0" />
+        </radialGradient>
         <radialGradient id={id('backlight')} cx="50%" cy="45%" r="50%">
           <stop offset="0" stopColor={t === 9 ? gold : light} stopOpacity="0.55" />
           <stop offset="1" stopColor={t === 9 ? gold : light} stopOpacity="0" />
@@ -317,6 +359,7 @@ export function RankBadge({ rank, size = 44 }: { rank: Rank; size?: number }) {
               const len = w.len[0] + (w.len[1] - w.len[0]) * Math.sin(k * Math.PI * 0.6);
               return (
                 <g key={`${row}-${i}`} transform={`translate(${w.at[0]} ${w.at[1]}) rotate(${a})`}>
+                  <path d={feather(len, w.w)} transform="translate(0.4 1.1)" fill={mix(row === 0 ? trim.dark : c, CHARCOAL, 0.55)} />
                   <path d={feather(len, w.w)} fill={row === 0 ? `url(#${id('chromeTrim')})` : `url(#${id('chrome')})`} stroke={row === 0 ? trim.dark : darker} strokeOpacity="0.7" strokeWidth="0.5" />
                   <path d={`M1 ${-w.w * 0.12} L${len * 0.86} ${-w.w * 0.18}`} stroke="#fff" strokeOpacity="0.6" strokeWidth="0.45" strokeLinecap="round" />
                 </g>
@@ -364,14 +407,19 @@ export function RankBadge({ rank, size = 44 }: { rank: Rank; size?: number }) {
 
         {/* The lifter stands behind the shield, flexing over it, bigger every tier */}
         <g transform={`translate(0 ${(-26.5 - 1.5 * (t / 9)).toFixed(2)}) scale(${(FIG_K * (0.86 + 0.14 * (t / 9))).toFixed(3)})`}>
-          <Lifter m={t / 9} classical={t === 9} fill={`url(#${id('fig')})`} outline={t === 9 ? '#5c4310' : mix(c, CHARCOAL, 0.75)} line={t === 9 ? '#7a5a18' : light} wreath="#3f7a3a"
+          <Lifter m={t / 9} classical={t === 9} fill={`url(#${id('fig')})`} outline={t === 9 ? '#5c4310' : mix(c, CHARCOAL, 0.75)} rim={t === 9 ? '#fff6d6' : lighter} line={t === 9 ? '#7a5a18' : light} wreath="#3f7a3a"
             crown={t === 7 || t === 8 ? { points: t === 7 ? 3 : 5, fill: `url(#${id('trim')})`, stroke: trim.dark } : null}
             pauldron={t >= 7 ? { n: t - 5, len: 2.4 + (t - 7) * 1, fill: `url(#${id('trim')})`, stroke: trim.dark } : null} />
         </g>
 
-        {/* Plate */}
+        {/* Plate, with depth: a thick side wall under it, a bevel between rim and face, and a lit face */}
+        <path d={body} transform="translate(0 2.2)" fill={mix(c, CHARCOAL, 0.7)} />
+        <path d={body} transform="translate(0 1.1)" fill={mix(c, CHARCOAL, 0.5)} />
         <path d={body} fill={`url(#${id('chrome')})`} stroke={mix(c, CHARCOAL, 0.75)} strokeOpacity="0.8" strokeWidth="0.8" />
+        <path d={scalePath(body, 0.8)} fill="none" stroke={`url(#${id('bevel')})`} strokeWidth="2.2" />
         <path d={scalePath(body, 0.74)} fill={t === 9 ? `url(#${id('royal')})` : `url(#${id('face')})`} />
+        <path d={scalePath(body, 0.74)} fill={`url(#${id('spec')})`} />
+        <path d={scalePath(body, 0.74)} fill="none" stroke={`url(#${id('inset')})`} strokeWidth="1" />
         {/* centre ridge: the right half of the face sits in shadow */}
         <g mask={`url(#${id('facemask')})`}>
           <rect x="0" y="-30" width="30" height="60" fill={CHARCOAL} opacity="0.16" />
