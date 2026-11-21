@@ -30,6 +30,9 @@ When the request is workout feedback (after they tap "Done workout"):
 
 When they ask a question, answer it directly using their data, in under 200 words unless they ask for more detail.`;
 
+/** The only Supabase user allowed to use the coach (vince). */
+const OWNER_ID = 'ed0d8a51-5211-4efc-9250-fd20b667e435';
+
 type Msg = { role: 'user' | 'assistant'; content: string };
 
 function json(body: unknown, status = 200) {
@@ -51,8 +54,9 @@ Deno.serve(async (req) => {
   } catch {
     return json({ error: 'Bad session.' }, 401);
   }
-  const allowed = (Deno.env.get('COACH_EMAILS') ?? '').split(',').map((s) => s.trim().toLowerCase()).filter(Boolean);
-  if (allowed.length && !allowed.includes((auth.user.email ?? '').toLowerCase())) return json({ error: 'Not allowed.' }, 403);
+  // Locked to the one owner account. COACH_USER_IDS (comma-separated) can override.
+  const allowed = (Deno.env.get('COACH_USER_IDS') ?? OWNER_ID).split(',').map((s) => s.trim()).filter(Boolean);
+  if (!allowed.includes(auth.user.id)) return json({ error: 'Not allowed.' }, 403);
 
   const apiKey = Deno.env.get('ANTHROPIC_API_KEY');
   if (!apiKey) return json({ error: 'The coach has no API key yet. Add ANTHROPIC_API_KEY in Supabase.' }, 503);
