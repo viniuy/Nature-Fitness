@@ -7,6 +7,7 @@ import { ensureSeed } from '@/lib/db';
 import { startSync } from '@/lib/sync';
 import { useSyncState } from '@/lib/hooks';
 import { Icon, type IconName } from './Icon';
+import { haptic } from '@/lib/haptics';
 
 const NAV: { href: string; label: string; icon: IconName }[] = [
   { href: '/', label: 'Today', icon: 'dumbbell' },
@@ -52,6 +53,13 @@ export function Shell({ children }: { children: ReactNode }) {
     }
     // Ask the browser not to clear the local database under storage pressure.
     navigator.storage?.persist?.().catch(() => {});
+    // A light haptic tick on every button press.
+    const onClick = (e: MouseEvent) => {
+      const t = (e.target as Element | null)?.closest?.('button, [role="button"]');
+      if (t && !(t as HTMLButtonElement).disabled && !t.closest('label[for="nf-haptic"]')) haptic();
+    };
+    document.addEventListener('click', onClick, true);
+    return () => document.removeEventListener('click', onClick, true);
   }, []);
 
   return (
@@ -84,7 +92,7 @@ export function Shell({ children }: { children: ReactNode }) {
               </Link>
             </div>
           </div>
-          {children}
+          <div className="page" key={path}>{children}</div>
         </main>
       </div>
       <nav className="tabbar" aria-label="Main">
