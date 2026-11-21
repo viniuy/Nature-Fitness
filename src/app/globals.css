@@ -940,3 +940,4 @@ button, [role='button'], .chip, .tabbar a, .sidebar a { user-select: none; -webk
 .fx.has-body .donebtn { height: 54px; font-size: 16px; }
 .bodytarget { --bt-s: color-mix(in srgb, var(--accent) 55%, #ecebe7); }
 .fx.has-body .fx-setno { justify-content: center; }
+.bodytarget { -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 9%, #000 88%, transparent 100%); mask-image: linear-gradient(to bottom, transparent 0, #000 9%, #000 88%, transparent 100%); }
