@@ -15,10 +15,10 @@ export const RANKS = [
   { id: 'gold', name: 'Gold', min: 40, tier: 3, color: '#d9a93f', ink: '#3d2a00' },
   { id: 'platinum', name: 'Platinum', min: 55, tier: 4, color: '#3aa9a1', ink: '#f0fffd' },
   { id: 'emerald', name: 'Emerald', min: 70, tier: 5, color: '#2fae6b', ink: '#effff6' },
-  { id: 'diamond', name: 'Diamond', min: 80, tier: 6, color: '#4f86ee', ink: '#f1f6ff' },
+  { id: 'diamond', name: 'Diamond', min: 80, tier: 6, color: '#5a87dc', ink: '#f1f6ff' },
   { id: 'master', name: 'Master', min: 90, tier: 7, color: '#9a5ce6', ink: '#f8f1ff' },
   { id: 'grandmaster', name: 'Grandmaster', min: 96, tier: 8, color: '#d9443b', ink: '#fff1ef', glow: true },
-  { id: 'champion', name: 'Champion', min: 99, tier: 9, color: '#f3c74b', ink: '#3b2600', glow: true },
+  { id: 'champion', name: 'Champion', min: 99, tier: 9, color: '#e9c25a', ink: '#3b2600', glow: true },
 ] as const;
 export type Rank = (typeof RANKS)[number];
 

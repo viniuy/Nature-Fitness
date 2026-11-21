@@ -15,9 +15,16 @@ import type { Rank } from '@/lib/ranks';
  *   Grandmaster  bigger double wings, five-point crown, glow
  *   Champion  triple gold wings, tall jewelled crown, star gem, rays and sparkles
  * The emblem also grows inside its box, so lower tiers look smaller.
+ *
+ * Styling follows the Taste rules: one material for every tier (a metal bezel
+ * around an enamel face with a 1px inner highlight), shadows tinted to the
+ * tier instead of neon glows, charcoal rather than pure black, and evenly
+ * spaced geometry. Eliteness comes from form (wings, crown, gems) and a slow
+ * metallic sheen on the top two tiers, not from blur.
  */
 
 const SCALE = [0.6, 0.66, 0.72, 0.76, 0.78, 0.78, 0.8, 0.8, 0.84, 0.88];
+const CHARCOAL = '#17181a';
 
 function mix(a: string, b: string, t: number) {
   const p = (h: string) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16));
@@ -33,9 +40,9 @@ function scalePath(d: string, k: number) {
   return d.replace(/-?\d+(\.\d+)?/g, (n) => String(Math.round(parseFloat(n) * k * 100) / 100));
 }
 
-/** One feather pointing along +x from the origin. */
+/** One tapered wing blade pointing along +x from the origin. */
 function feather(len: number, w: number) {
-  return `M0 0 C${len * 0.3} ${-w} ${len * 0.78} ${-w * 0.85} ${len} 0 C${len * 0.72} ${w * 0.45} ${len * 0.3} ${w * 0.55} 0 0 Z`;
+  return `M0 ${-w * 0.5} L${len * 0.8} ${-w * 0.42} Q${len} 0 ${len * 0.8} ${w * 0.42} L0 ${w * 0.5} Z`;
 }
 
 function leaf(len: number, w: number) {
@@ -44,16 +51,17 @@ function leaf(len: number, w: number) {
 
 interface Wing { n: number; from: number; to: number; len: [number, number]; w: number; at: [number, number] }
 
+// Evenly spaced blades; the top blade is the longest, like a heraldic wing.
 const WINGS: Record<number, Wing[]> = {
-  7: [{ n: 5, from: 172, to: 232, len: [12, 18], w: 2.6, at: [-11, -3] }],
+  7: [{ n: 4, from: 178, to: 226, len: [11, 17], w: 3.2, at: [-11, -4] }],
   8: [
-    { n: 6, from: 168, to: 240, len: [16, 25], w: 2.8, at: [-11, -4] },
-    { n: 5, from: 176, to: 228, len: [10, 16], w: 2.6, at: [-12, -2] },
+    { n: 5, from: 172, to: 232, len: [13, 23], w: 3.4, at: [-11, -5] },
+    { n: 4, from: 182, to: 224, len: [9, 15], w: 3.2, at: [-12, -3] },
   ],
   9: [
-    { n: 7, from: 164, to: 246, len: [19, 31], w: 3, at: [-11, -5] },
-    { n: 6, from: 172, to: 236, len: [14, 22], w: 2.8, at: [-12, -3] },
-    { n: 5, from: 180, to: 226, len: [9, 14], w: 2.6, at: [-12, -1] },
+    { n: 6, from: 166, to: 238, len: [15, 29], w: 3.6, at: [-11, -6] },
+    { n: 5, from: 176, to: 230, len: [11, 21], w: 3.4, at: [-12, -4] },
+    { n: 4, from: 186, to: 222, len: [8, 13], w: 3.2, at: [-12, -2] },
   ],
 };
 
@@ -63,9 +71,9 @@ export function RankBadge({ rank, size = 44 }: { rank: Rank; size?: number }) {
   const c = rank.color;
   const light = mix(c, '#ffffff', 0.5);
   const lighter = mix(c, '#ffffff', 0.78);
-  const dark = mix(c, '#000000', 0.38);
-  const darker = mix(c, '#000000', 0.58);
-  const gold = '#f3c74b';
+  const dark = mix(c, CHARCOAL, 0.38);
+  const darker = mix(c, CHARCOAL, 0.58);
+  const gold = '#e9c25a';
   const goldLight = '#fff1b8';
   const goldDark = '#a8741a';
   const glow = 'glow' in rank && rank.glow;
@@ -102,23 +110,18 @@ export function RankBadge({ rank, size = 44 }: { rank: Rank; size?: number }) {
           <stop offset="0.35" stopColor={t === 9 ? '#fffbe6' : lighter} />
           <stop offset="1" stopColor={t === 9 ? gold : c} />
         </linearGradient>
-        <radialGradient id={id('halo')}>
-          <stop offset="0" stopColor={c} stopOpacity="0.9" />
-          <stop offset="1" stopColor={c} stopOpacity="0" />
-        </radialGradient>
+        <filter id={id('shadow')} x="-30%" y="-30%" width="160%" height="170%">
+          <feDropShadow dx="0" dy="1.6" stdDeviation="1.4" floodColor={darker} floodOpacity="0.32" />
+        </filter>
+        <clipPath id={id('clip')}><path d={body} /></clipPath>
+        <linearGradient id={id('sheen')} x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0" stopColor="#fff" stopOpacity="0" />
+          <stop offset="0.5" stopColor="#fff" stopOpacity="0.55" />
+          <stop offset="1" stopColor="#fff" stopOpacity="0" />
+        </linearGradient>
       </defs>
 
-      {glow && <circle cx="32" cy="32" r={t === 9 ? 31 : 27} fill={`url(#${id('halo')})`} className="rb-halo" />}
-
-      {t === 9 && (
-        <g className="rb-rays" style={{ transformOrigin: '32px 32px' }}>
-          {Array.from({ length: 12 }, (_, i) => (
-            <path key={i} d="M32 32 L30.6 2 L33.4 2 Z" fill={goldLight} opacity={i % 2 ? 0.35 : 0.6} transform={`rotate(${i * 30} 32 32)`} />
-          ))}
-        </g>
-      )}
-
-      <g transform={`translate(32 ${t >= 7 ? 34 : 32}) scale(${SCALE[t]})`}>
+      <g transform={`translate(32 ${t >= 7 ? 34 : 32}) scale(${SCALE[t]})`} filter={`url(#${id('shadow')})`}>
         {/* Wings, mirrored */}
         {wings.length > 0 && [1, -1].map((side) => (
           <g key={side} transform={`scale(${side} 1)`}>
@@ -137,6 +140,7 @@ export function RankBadge({ rank, size = 44 }: { rank: Rank; size?: number }) {
         {/* Laurel */}
         {laurel && [1, -1].map((side) => (
           <g key={side} transform={`scale(${side} 1)`}>
+            <path d={`M${(laurel.r * Math.cos(1.9)).toFixed(2)} ${(laurel.r * Math.sin(1.9) + 2).toFixed(2)} A${laurel.r} ${laurel.r} 0 0 1 ${(laurel.r * Math.cos(3.6)).toFixed(2)} ${(laurel.r * Math.sin(3.6) + 2).toFixed(2)}`} fill="none" stroke={dark} strokeWidth="0.9" strokeLinecap="round" />
             {Array.from({ length: laurel.n }, (_, i) => {
               const th = (112 + (95 * i) / (laurel.n - 1)) * (Math.PI / 180);
               const x = laurel.r * Math.cos(th), y = laurel.r * Math.sin(th) + 2;
@@ -174,7 +178,7 @@ export function RankBadge({ rank, size = 44 }: { rank: Rank; size?: number }) {
         {/* Plate */}
         <path d={body} fill={`url(#${id('rim')})`} stroke={darker} strokeOpacity="0.55" strokeWidth="0.8" />
         <path d={scalePath(body, t === 0 ? 0.86 : 0.78)} fill={`url(#${id('face')})`} />
-        {t >= 4 && <path d={`M0 ${-20 * 0.78} L0 ${21 * 0.78} C${8.5 * 0.78} ${16.5 * 0.78} ${15 * 0.78} ${10.5 * 0.78} ${15 * 0.78} ${1 * 0.78} L${15 * 0.78} ${-14.5 * 0.78} Z`} fill="#000" opacity="0.12" />}
+        {t >= 4 && <path d={`M0 ${-20 * 0.78} L0 ${21 * 0.78} C${8.5 * 0.78} ${16.5 * 0.78} ${15 * 0.78} ${10.5 * 0.78} ${15 * 0.78} ${1 * 0.78} L${15 * 0.78} ${-14.5 * 0.78} Z`} fill={CHARCOAL} opacity="0.12" />}
         {t === 0 && <path d={scalePath(HEX, 0.86)} fill="none" stroke={darker} strokeOpacity="0.35" strokeWidth="0.8" />}
 
         {/* Emblem in the middle */}
@@ -210,13 +214,20 @@ export function RankBadge({ rank, size = 44 }: { rank: Rank; size?: number }) {
           </g>
         )}
 
-        {/* Top light */}
+        {/* Metallic sheen sweeping across the top two tiers */}
+        {t >= 8 && (
+          <g clipPath={`url(#${id('clip')})`}>
+            <rect className="rb-sheen" x="-30" y="-30" width="14" height="60" fill={`url(#${id('sheen')})`} transform="skewX(-20)" />
+          </g>
+        )}
+
+        {/* Inner highlight: a 1px refraction edge along the top of the face */}
         <path d={scalePath(body, 0.78)} fill="none" stroke="#fff" strokeOpacity={t >= 2 ? 0.35 : 0.2} strokeWidth="0.7" />
       </g>
 
       {t === 9 && (
-        <g className="rb-sparkle" fill="#fffbe6">
-          {[[9, 14, 1], [55, 12, 0.8], [52, 50, 0.9], [12, 50, 0.7]].map(([x, y, s], i) => (
+        <g className="rb-sparkle" fill={goldLight}>
+          {[[10, 16, 0.8], [54, 46, 0.65]].map(([x, y, s], i) => (
             <path key={i} d="M0 -4 L1 -1 L4 0 L1 1 L0 4 L-1 1 L-4 0 L-1 -1 Z" transform={`translate(${x} ${y}) scale(${s})`} style={{ animationDelay: `${i * 0.6}s` }} />
           ))}
         </g>

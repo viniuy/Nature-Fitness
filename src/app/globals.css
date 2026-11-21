@@ -967,14 +967,12 @@ button, [role='button'], .chip, .tabbar a, .sidebar a { user-select: none; -webk
   .home-days { width: 52%; }
 }
 
-/* Rank emblems: the top tiers glow, Champion's rays turn and its sparkles twinkle */
-.rankbadge .rb-halo { animation: rb-pulse 2.8s ease-in-out infinite; }
-@keyframes rb-pulse { 50% { opacity: 0.45; } }
-.rankbadge .rb-rays { animation: rb-spin 24s linear infinite; }
-@keyframes rb-spin { to { transform: rotate(360deg); } }
-.rankbadge .rb-sparkle path { animation: rb-twinkle 2.4s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
-@keyframes rb-twinkle { 0%, 100% { opacity: 0.15; } 50% { opacity: 1; } }
-@media (prefers-reduced-motion: reduce) { .rankbadge .rb-halo, .rankbadge .rb-rays, .rankbadge .rb-sparkle path { animation: none; } }
+/* Rank emblems: a slow metallic sheen on the top two tiers, Champion's glints twinkle */
+.rankbadge .rb-sheen { animation: rb-sheen 4.8s cubic-bezier(0.16, 1, 0.3, 1) infinite; }
+@keyframes rb-sheen { 0% { transform: skewX(-20deg) translateX(0); } 55%, 100% { transform: skewX(-20deg) translateX(64px); } }
+.rankbadge .rb-sparkle path { animation: rb-twinkle 3.2s ease-in-out infinite; }
+@keyframes rb-twinkle { 0%, 100% { opacity: 0.2; } 50% { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .rankbadge .rb-sheen { animation: none; opacity: 0; } .rankbadge .rb-sparkle path { animation: none; } }
 .rankladder { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px 4px; margin-top: 6px; }
 .rankladder span { display: flex; flex-direction: column; align-items: center; gap: 3px; text-align: center; min-width: 0; }
 .rankladder b { font-size: 11px; font-weight: 600; color: var(--ink); max-width: 100%; letter-spacing: -0.01em; overflow-wrap: anywhere; }
