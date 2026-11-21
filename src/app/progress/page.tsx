@@ -19,7 +19,7 @@ interface LiftSeries {
 function buildLifts(sessions: Session[], order: { id: string; name: string; unit: Unit; day: string }[]): LiftSeries[] {
   const asc = [...sessions].sort((a, b) => (a.date < b.date ? -1 : 1));
   const known = new Map(order.map((o) => [o.id, o]));
-  for (const s of asc) for (const [id, e] of Object.entries(s.exercises)) if (!known.has(id)) known.set(id, { id, name: e.name, unit: e.unit, day: s.dayName });
+  for (const s of asc) for (const [id, e] of Object.entries(s.exercises)) if (!known.has(id) && s.sets[id]?.some(hasSet)) known.set(id, { id, name: e.name, unit: e.unit, day: s.dayName });
   const out: LiftSeries[] = [];
   for (const ex of known.values()) {
     const logged = asc.filter((s) => s.sets[ex.id]?.some(hasSet));

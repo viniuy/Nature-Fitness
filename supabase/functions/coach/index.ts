@@ -28,7 +28,52 @@ When the request is workout feedback (after they tap "Done workout"):
 - End with what to aim for next time on one or two key lifts.
 - 80 to 150 words.
 
-When they ask a question, answer it directly using their data, in under 200 words unless they ask for more detail.`;
+When they ask a question, answer it directly using their data, in under 200 words unless they ask for more detail.
+
+Changing their program:
+- You can change their program with the propose_program_edit tool. Use it when they ask you to change, swap, add or remove exercises, sets or reps, or when they say yes to a change you suggested. Do not use it unprompted.
+- They see a preview and must tap Apply, so say in one or two sentences what you changed and why, then call the tool.
+- Send each day you change in full, in order. Keep the id of every exercise you keep or tweak (from the [id] in the program), so their history and progress stay linked. Leave id out only for a brand-new exercise. Leave out an exercise to remove it.
+- Past workouts are never changed by this. Their history keeps what they actually did.`;
+
+const TOOLS = [{
+  name: 'propose_program_edit',
+  description: 'Propose changes to one or more days of the user\'s training program. The user sees a preview and applies it with one tap. Send every changed day in full, with exercises in order.',
+  input_schema: {
+    type: 'object' as const,
+    properties: {
+      summary: { type: 'string', description: 'One short sentence: what changes and why.' },
+      days: {
+        type: 'array',
+        items: {
+          type: 'object',
+          properties: {
+            day_id: { type: 'string', description: 'The id of an existing day, from the program.' },
+            exercises: {
+              type: 'array',
+              description: 'The full new exercise list for this day, in order.',
+              items: {
+                type: 'object',
+                properties: {
+                  id: { type: 'string', description: 'Existing exercise id to keep or tweak. Omit for a new exercise.' },
+                  name: { type: 'string' },
+                  sets: { type: 'integer', description: 'Working sets, 1 to 12.' },
+                  scheme: { type: 'string', description: 'Sets × reps, e.g. "3 × 8-10".' },
+                  unit: { type: ['string', 'null'], enum: ['kg', '+kg', 'cm', null], description: 'kg for loaded lifts, +kg for added weight on bodyweight moves, null for reps or time only.' },
+                  hint: { type: 'string', description: 'Optional short cue.' },
+                },
+                required: ['name', 'sets', 'scheme', 'unit'],
+              },
+            },
+          },
+          required: ['day_id', 'exercises'],
+        },
+      },
+    },
+    required: ['summary', 'days'],
+  },
+}];
+
 
 /** The only Supabase user allowed to use the coach (vince). */
 const OWNER_ID = 'ed0d8a51-5211-4efc-9250-fd20b667e435';
@@ -83,11 +128,15 @@ Deno.serve(async (req) => {
         { type: 'text', text: SYSTEM },
         { type: 'text', text: `Training data (today is ${new Date().toISOString().slice(0, 10)}):\n${context}` },
       ],
+      tools: TOOLS,
       messages,
     });
     if (res.stop_reason === 'refusal') return json({ text: "I can't help with that one. Ask me something about your training." });
     const text = res.content.flatMap((b) => (b.type === 'text' ? [b.text] : [])).join('').trim();
-    return json({ text: text || 'Hmm, I lost my train of thought. Try again?' });
+    const call = res.content.find((b) => b.type === 'tool_use' && b.name === 'propose_program_edit');
+    const proposal = call && call.type === 'tool_use' ? call.input : undefined;
+    const fallback = proposal ? String((proposal as { summary?: string }).summary ?? 'Here is the change.') : 'Hmm, I lost my train of thought. Try again?';
+    return json({ text: text || fallback, proposal });
   } catch (e) {
     if (e instanceof Anthropic.AuthenticationError) return json({ error: 'The coach API key was rejected. Check ANTHROPIC_API_KEY in Supabase.' }, 502);
     if (e instanceof Anthropic.RateLimitError) return json({ error: 'The coach is busy. Try again in a minute.' }, 429);

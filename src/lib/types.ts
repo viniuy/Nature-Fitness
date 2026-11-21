@@ -56,6 +56,15 @@ export interface SetEntry {
   done: boolean;
 }
 
+export interface SessionExercise {
+  name: string;
+  unit: Unit;
+  sets?: number;
+  scheme?: string;
+  /** Position in the day. */
+  i?: number;
+}
+
 export interface Session extends Synced {
   /** ISO date, YYYY-MM-DD. */
   date: string;
@@ -63,8 +72,13 @@ export interface Session extends Synced {
   programId: string;
   dayName: string;
   sets: Record<string, SetEntry[]>;
-  /** Exercise names and units at the time, so history reads right after program edits. */
-  exercises: Record<string, { name: string; unit: Unit }>;
+  /**
+   * The day as it was planned when this workout was done: every exercise's
+   * name, unit, target sets and scheme, in order. History and reopening a past
+   * workout read this, so later program edits never rewrite what was done.
+   * An entry with no logged sets was planned but skipped.
+   */
+  exercises: Record<string, SessionExercise>;
   warm: Record<string, boolean>;
   note: string;
 }

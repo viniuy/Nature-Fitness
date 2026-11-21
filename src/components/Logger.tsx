@@ -19,6 +19,33 @@ function emptySession(program: Program, day: Day, date: string): Session {
   };
 }
 
+/**
+ * A past workout reopens as it was planned that day, not as the program reads
+ * now, so program edits (yours or the coach's) never rewrite history.
+ * Workouts saved before snapshots existed fall back to the live day for
+ * targets, plus any logged exercise the day no longer has.
+ */
+export function dayAsDone(s: Session, live: Day | null): Day {
+  const entries = Object.entries(s.exercises);
+  const hasPlan = entries.some(([, e]) => e.i != null);
+  const liveEx = new Map((live?.exercises ?? []).map((e) => [e.id, e]));
+  let exercises: Exercise[];
+  if (hasPlan) {
+    exercises = entries
+      .sort((a, b) => (a[1].i ?? 999) - (b[1].i ?? 999))
+      .map(([id, e]) => ({ ...(liveEx.get(id) ?? {}), id, name: e.name, unit: e.unit, sets: e.sets ?? Math.max(1, s.sets[id]?.length ?? 3), scheme: e.scheme ?? liveEx.get(id)?.scheme ?? '' }));
+  } else {
+    const logged = Object.keys(s.sets).filter((id) => hasData(s.sets[id]));
+    exercises = (live?.exercises ?? []).map((e) => (s.exercises[e.id] ? { ...e, name: s.exercises[e.id].name, unit: s.exercises[e.id].unit } : e));
+    for (const id of logged) {
+      if (liveEx.has(id)) continue;
+      const e = s.exercises[id] ?? { name: id, unit: null };
+      exercises.push({ id, name: e.name, unit: e.unit, sets: Math.max(1, s.sets[id].length), scheme: '' });
+    }
+  }
+  return { id: s.dayId, tag: live?.tag ?? '', short: live?.short ?? s.dayName.slice(0, 3), name: s.dayName || live?.name || s.dayId, focus: live?.focus, warmup: live?.warmup ?? [], exercises };
+}
+
 function isEmpty(s: Session) {
   return !Object.values(s.sets).some(hasData) && !s.note.trim() && !Object.values(s.warm).some(Boolean);
 }
@@ -47,7 +74,14 @@ export function Logger() {
     else if (program.days[0]) setDayId(program.days[0].id);
   }, [program, sessions, dayId, date]);
 
-  const day = program?.days.find((d) => d.id === dayId) ?? null;
+  const liveDay = program?.days.find((d) => d.id === dayId) ?? null;
+  // Past workouts that were saved show the day as it was planned then.
+  const isPast = !!cur && cur.date < today && cur.updatedAt > 0 && cur.dayId === dayId;
+  const snapKey = isPast && cur ? JSON.stringify(cur.exercises) + cur.dayName : '';
+  const day = useMemo(
+    () => (isPast && cur ? dayAsDone(cur, liveDay) : liveDay),
+    [isPast, snapKey, liveDay], // eslint-disable-line react-hooks/exhaustive-deps
+  );
 
   const flush = useCallback(async () => {
     clearTimeout(saveTimer.current);
@@ -65,17 +99,17 @@ export function Logger() {
 
   // Load the session for the chosen date and day.
   useEffect(() => {
-    if (!program || !day) return;
+    if (!program || !liveDay) return;
     let live = true;
     void (async () => {
       await flush();
-      const existing = await db.sessions.get(sessionId(date, day.id));
+      const existing = await db.sessions.get(sessionId(date, liveDay.id));
       if (!live) return;
-      setCur(existing && !existing.deleted ? existing : emptySession(program, day, date));
+      setCur(existing && !existing.deleted ? existing : emptySession(program, liveDay, date));
       setSaved('idle');
     })();
     return () => { live = false; };
-  }, [program?.id, day?.id, date, flush]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [program?.id, liveDay?.id, date, flush]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     const onHide = () => { if (document.visibilityState === 'hidden') void flush(); };
@@ -87,9 +121,10 @@ export function Logger() {
     setCur((prev) => {
       if (!prev || !day) return prev;
       const next = fn(prev);
-      // Remember names and units, so history reads right after program edits.
+      // Snapshot the day as planned (names, units, targets, order), so history
+      // and reopening this workout read right after any later program edit.
       const exercises = { ...next.exercises };
-      for (const ex of day.exercises) if (hasData(next.sets[ex.id])) exercises[ex.id] = { name: ex.name, unit: ex.unit };
+      day.exercises.forEach((ex, i) => { exercises[ex.id] = { name: ex.name, unit: ex.unit, sets: ex.sets, scheme: ex.scheme, i }; });
       const out = { ...next, exercises, dayName: day.name };
       pending.current = out;
       setSaved('saving');

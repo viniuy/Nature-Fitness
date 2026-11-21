@@ -1,10 +1,10 @@
 'use client';
 
-import { db, getMeta, newId, setMeta, type CoachRow } from './db';
+import { db, getMeta, newId, saveRecord, setMeta, type CoachRow, type ProgramProposal } from './db';
 import { scoreMuscles, MUSCLE_NAMES } from './ranks';
 import { supabase, syncConfigured } from './sync';
 import { fmtNum, hasSet } from './training';
-import type { BodyStat, Program, Session } from './types';
+import type { BodyStat, Day, Exercise, Program, Session, Unit } from './types';
 
 export const COACH_NAME = 'W.I.L.L.I.A.M';
 export const COACH_ACRONYM = 'Weights In, Lifts Logged, Iron Always Matters';
@@ -53,7 +53,8 @@ export async function buildContext(focusSessionId?: string): Promise<string> {
 
   if (program) {
     out.push('\n## Program: ' + program.name);
-    for (const d of program.days) out.push(`${d.name}: ${d.exercises.map((e) => `${e.name} ${e.scheme.split(' · ')[0]}`).join('; ')}`);
+    out.push('Each day is listed as: day name {day id}: [exercise id] name, sets × reps, unit.');
+    for (const d of program.days) out.push(`${d.name} {${d.id}}: ${d.exercises.map((e) => `[${e.id}] ${e.name}, ${e.scheme.split(' · ')[0]}, ${e.unit ?? 'reps/time'}`).join('; ')}`);
   }
 
   if (bw) {
@@ -113,7 +114,9 @@ function toMessages(rows: CoachRow[], upTo: CoachRow): { role: 'user' | 'assista
     if (r.role === 'user' && r.id !== upTo.id && r.status !== 'done') continue;
     const content = r.kind === 'feedback' && r.role === 'user'
       ? `I just finished my workout (${r.text.replace(/^Done workout: /, '')}). It's under "Workout to review" in my data. How did I do?`
-      : r.text;
+      : r.role === 'assistant' && r.proposal
+        ? `${r.text}\n\n[I proposed a program change: ${r.proposal.summary} The user ${r.proposalState === 'applied' ? 'applied it' : r.proposalState === 'dismissed' ? 'dismissed it' : 'has not applied it yet'}.]`
+        : r.text;
     const last = msgs[msgs.length - 1];
     if (last && last.role === r.role) last.content += '\n\n' + content;
     else msgs.push({ role: r.role, content });
@@ -139,7 +142,7 @@ export async function processCoach(): Promise<void> {
 
       const all = await db.coach.orderBy('createdAt').toArray();
       const context = await buildContext(next.kind === 'feedback' ? next.sessionId : undefined);
-      const { data: res, error } = await sb.functions.invoke<{ text?: string; error?: string }>('coach', {
+      const { data: res, error } = await sb.functions.invoke<{ text?: string; error?: string; proposal?: unknown }>('coach', {
         body: { mode: next.kind, context, messages: toMessages(all, next) },
       });
       let text = res?.text;
@@ -154,7 +157,7 @@ export async function processCoach(): Promise<void> {
       if (text) {
         await db.transaction('rw', db.coach, async () => {
           await db.coach.update(next.id, { status: 'done', error: undefined });
-          await db.coach.put({ id: newId(), role: 'assistant', kind: next.kind, sessionId: next.sessionId, text, createdAt: Date.now() });
+          await db.coach.put({ id: newId(), role: 'assistant', kind: next.kind, sessionId: next.sessionId, text, createdAt: Date.now(), proposal: cleanProposal(res?.proposal) });
         });
       } else {
         await db.coach.update(next.id, { status: 'error', error: err || 'No answer. Try again.' });
@@ -163,6 +166,89 @@ export async function processCoach(): Promise<void> {
   } finally {
     running = false;
   }
+}
+
+/* ---------- Program changes the coach proposes ---------- */
+
+const UNITS: Unit[] = ['kg', '+kg', 'cm', null];
+
+/** Keeps only a well-formed proposal; anything odd from the model is dropped. */
+export function cleanProposal(raw: unknown): ProgramProposal | undefined {
+  if (!raw || typeof raw !== 'object') return undefined;
+  const r = raw as { summary?: unknown; days?: unknown };
+  if (!Array.isArray(r.days)) return undefined;
+  const days = r.days.flatMap((d) => {
+    if (!d || typeof d !== 'object' || typeof d.day_id !== 'string' || !Array.isArray(d.exercises)) return [];
+    const exercises = (d.exercises as Record<string, unknown>[]).flatMap((e) => {
+      if (!e || typeof e.name !== 'string' || !e.name.trim()) return [];
+      const sets = Math.max(1, Math.min(12, Math.round(Number(e.sets) || 3)));
+      const unit = UNITS.includes(e.unit as Unit) ? (e.unit as Unit) : 'kg';
+      return [{ id: typeof e.id === 'string' ? e.id : undefined, name: e.name.trim().slice(0, 60), sets, scheme: typeof e.scheme === 'string' && e.scheme.trim() ? e.scheme.trim().slice(0, 40) : `${sets} × 8`, unit, hint: typeof e.hint === 'string' ? e.hint.slice(0, 200) : undefined }];
+    });
+    return exercises.length ? [{ day_id: d.day_id as string, exercises }] : [];
+  });
+  return days.length ? { summary: typeof r.summary === 'string' ? r.summary : 'Program change', days } : undefined;
+}
+
+async function activeProgram(): Promise<Program | undefined> {
+  const all = await db.programs.toArray();
+  return all.find((p) => p.active && !p.deleted) ?? all.find((p) => !p.deleted);
+}
+
+export type ProposalLine = { kind: 'same' | 'changed' | 'added' | 'removed'; name: string; detail: string; was?: string };
+
+/** What a proposal would do to each day, for the preview card. */
+export function previewProposal(program: Program | undefined, p: ProgramProposal) {
+  return p.days.map((d) => {
+    const day = program?.days.find((x) => x.id === d.day_id);
+    const old = new Map((day?.exercises ?? []).map((e) => [e.id, e]));
+    const kept = new Set<string>();
+    const lines: ProposalLine[] = d.exercises.map((e) => {
+      const was = e.id ? old.get(e.id) : undefined;
+      const short = (x: string) => x.split(' · ')[0];
+      if (!was) return { kind: 'added', name: e.name, detail: short(e.scheme) };
+      kept.add(was.id);
+      const same = was.name === e.name && was.scheme === e.scheme && was.sets === e.sets && was.unit === e.unit;
+      return same ? { kind: 'same', name: e.name, detail: short(e.scheme) } : { kind: 'changed', name: e.name, detail: short(e.scheme), was: was.name !== e.name ? `was ${was.name}` : `was ${short(was.scheme)}` };
+    });
+    for (const e of day?.exercises ?? []) if (!kept.has(e.id)) lines.push({ kind: 'removed', name: e.name, detail: e.scheme.split(' · ')[0] });
+    return { dayId: d.day_id, dayName: day?.name ?? 'Unknown day', missing: !day, lines };
+  });
+}
+
+/** Applies the coach's proposal to the program. Past workouts keep their own snapshot. */
+export async function applyProposal(rowId: string): Promise<void> {
+  const row = await db.coach.get(rowId);
+  const program = await activeProgram();
+  if (!row?.proposal || !program) return;
+  const before = program.days.map((d) => ({ ...d }));
+  const anyEx = new Map(program.days.flatMap((d) => d.exercises.map((e) => [e.id, e] as const)));
+  const days: Day[] = program.days.map((day) => {
+    const change = row.proposal!.days.find((c) => c.day_id === day.id);
+    if (!change) return day;
+    const exercises: Exercise[] = change.exercises.map((e) => {
+      const was = e.id ? anyEx.get(e.id) : undefined;
+      const base: Exercise = was ? { ...was } : { id: newId(), name: e.name, sets: e.sets, scheme: e.scheme, unit: e.unit };
+      return { ...base, name: e.name, sets: e.sets, scheme: e.scheme, unit: e.unit, ...(e.hint ? { hint: e.hint } : {}) };
+    });
+    return { ...day, exercises };
+  });
+  await saveRecord('program', { ...program, days });
+  await db.coach.update(rowId, { proposalState: 'applied', proposalUndo: { programId: program.id, days: before } });
+}
+
+export async function undoProposal(rowId: string): Promise<void> {
+  const row = await db.coach.get(rowId);
+  const program = await activeProgram();
+  if (!row?.proposalUndo || !program || program.id !== row.proposalUndo.programId) return;
+  const changed = new Set(row.proposal?.days.map((d) => d.day_id));
+  const days = program.days.map((d) => (changed.has(d.id) ? row.proposalUndo!.days.find((x) => x.id === d.id) ?? d : d));
+  await saveRecord('program', { ...program, days });
+  await db.coach.update(rowId, { proposalState: undefined, proposalUndo: undefined });
+}
+
+export async function dismissProposal(rowId: string): Promise<void> {
+  await db.coach.update(rowId, { proposalState: 'dismissed' });
 }
 
 let started = false;

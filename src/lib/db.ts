@@ -1,5 +1,5 @@
 import Dexie, { type Table } from 'dexie';
-import type { BodyStat, Program, Session, SyncKind } from './types';
+import type { BodyStat, Day, Program, Session, SyncKind, Unit } from './types';
 import seed from './seed-program.json';
 
 export interface OutboxRow {
@@ -28,7 +28,15 @@ export interface CoachRow {
   /** User messages wait as pending until the coach has answered them. */
   status?: 'pending' | 'done' | 'error';
   error?: string;
+  /** A program change the coach proposed, applied only when the user taps Apply. */
+  proposal?: ProgramProposal;
+  proposalState?: 'applied' | 'dismissed';
+  /** The days as they were before Apply, so the change can be undone. */
+  proposalUndo?: { programId: string; days: Day[] };
 }
+
+export interface ProposedExercise { id?: string; name: string; sets: number; scheme: string; unit: Unit; hint?: string }
+export interface ProgramProposal { summary: string; days: { day_id: string; exercises: ProposedExercise[] }[] }
 
 export interface MetaRow {
   key: string;
@@ -72,11 +80,48 @@ export async function saveRecord<K extends SyncKind>(
   rec: K extends 'program' ? Program : K extends 'session' ? Session : BodyStat,
 ): Promise<void> {
   const row = { ...rec, updatedAt: Date.now() };
+  // Before a program changes, freeze how its days looked into every past
+  // workout that has no snapshot yet, so history keeps what was planned then.
+  if (kind === 'program') {
+    const prev = await db.programs.get(rec.id);
+    if (prev) await freezeSessions(prev);
+  }
   await db.transaction('rw', [tableFor[kind](), db.outbox], async () => {
     await (tableFor[kind]() as unknown as Table<typeof row, string>).put(row);
     await db.outbox.put({ key: `${kind}:${rec.id}`, kind, id: rec.id });
   });
   notifyChange();
+}
+
+/**
+ * Writes the planned day (names, units, targets, order) into workouts saved
+ * before snapshots existed. Logged exercises keep the name they were logged
+ * under. Safe to run any time: workouts that already have a snapshot are skipped.
+ */
+export async function freezeSessions(program: Program): Promise<number> {
+  const all = await db.sessions.toArray();
+  const todo = all.filter((s) => !s.deleted && s.programId === program.id && !Object.values(s.exercises ?? {}).some((e) => e.i != null));
+  if (!todo.length) return 0;
+  const now = Date.now();
+  const rows = todo.flatMap((s) => {
+    const day = program.days.find((d) => d.id === s.dayId);
+    if (!day) return [];
+    const exercises: Session['exercises'] = {};
+    day.exercises.forEach((ex, i) => {
+      const had = s.exercises?.[ex.id];
+      exercises[ex.id] = { name: had?.name ?? ex.name, unit: had?.unit ?? ex.unit, sets: ex.sets, scheme: ex.scheme, i };
+    });
+    let k = day.exercises.length;
+    for (const [id, e] of Object.entries(s.exercises ?? {})) if (!exercises[id]) exercises[id] = { ...e, i: k++ };
+    return [{ ...s, exercises, updatedAt: now }];
+  });
+  if (!rows.length) return 0;
+  await db.transaction('rw', [db.sessions, db.outbox], async () => {
+    await db.sessions.bulkPut(rows);
+    await db.outbox.bulkPut(rows.map((r) => ({ key: `session:${r.id}`, kind: 'session' as const, id: r.id })));
+  });
+  notifyChange();
+  return rows.length;
 }
 
 /** Soft delete, so the delete reaches the other device too. */

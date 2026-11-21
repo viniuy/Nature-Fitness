@@ -2,8 +2,8 @@
 
 import { Fragment, useEffect, useState, type ReactNode } from 'react';
 import Link from 'next/link';
-import { askCoach, COACH_ACRONYM, COACH_NAME, markCoachSeen, onCoachIssue, processCoach, retryCoach, type CoachIssue } from '@/lib/coach';
-import { useCoachRows } from '@/lib/hooks';
+import { applyProposal, askCoach, COACH_ACRONYM, COACH_NAME, dismissProposal, markCoachSeen, onCoachIssue, previewProposal, processCoach, retryCoach, undoProposal, type CoachIssue } from '@/lib/coach';
+import { useActiveProgram, useCoachRows } from '@/lib/hooks';
 import type { CoachRow } from '@/lib/db';
 import { Icon } from '@/components/Icon';
 
@@ -12,7 +12,54 @@ const STARTERS = [
   'Which muscle should I bring up first?',
   'Am I training legs enough?',
   'What should my next deload look like?',
+  'Swap something on my push day',
 ];
+
+/** The coach's proposed program change: a preview, then Apply or Not now. */
+function ProposalCard({ row }: { row: CoachRow }) {
+  const program = useActiveProgram();
+  const [busy, setBusy] = useState(false);
+  if (!row.proposal || program === undefined) return null;
+  // Once applied, compare with the program as it was before, so the card keeps showing the change.
+  const base = program && row.proposalState === 'applied' && row.proposalUndo ? { ...program, days: row.proposalUndo.days } : program ?? undefined;
+  const days = previewProposal(base, row.proposal);
+  const state = row.proposalState;
+  const run = async (fn: (id: string) => Promise<void>) => { setBusy(true); try { await fn(row.id); } finally { setBusy(false); } };
+  const broken = days.some((d) => d.missing);
+  return (
+    <div className={`proposal${state ? ` ${state}` : ''}`}>
+      <div className="proposal-h"><Icon name="edit" size={15} />Program change</div>
+      {days.map((d) => (
+        <div key={d.dayId} className="proposal-day">
+          <b>{d.dayName}</b>
+          <ul>
+            {d.lines.map((l, i) => (
+              <li key={i} className={`pl-${l.kind}`}>
+                <span className="pl-mark" aria-hidden>{l.kind === 'added' ? '+' : l.kind === 'removed' ? '−' : l.kind === 'changed' ? '~' : ''}</span>
+                <span className="pl-name">{l.name}</span>
+                <span className="pl-detail">{l.detail}{l.was && <small>{l.was}</small>}</span>
+                <span className="sr-only">{l.kind === 'same' ? '' : l.kind}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ))}
+      {state === 'applied' ? (
+        <p className="proposal-foot">Applied to your program. Past workouts stay as you did them. <button type="button" className="linkbtn" disabled={busy} onClick={() => void run(undoProposal)}>Undo</button></p>
+      ) : state === 'dismissed' ? (
+        <p className="proposal-foot">Not applied.</p>
+      ) : broken ? (
+        <p className="proposal-foot">This refers to a day that is no longer in your program.</p>
+      ) : (
+        <div className="proposal-act">
+          <button type="button" className="btn" disabled={busy} onClick={() => void run(applyProposal)}>Apply</button>
+          <button type="button" className="btn secondary" disabled={busy} onClick={() => void run(dismissProposal)}>Not now</button>
+        </div>
+      )}
+      {state !== 'applied' && <p className="proposal-note">Your history won&apos;t change. Only workouts from now on use the new plan.</p>}
+    </div>
+  );
+}
 
 /** Tiny formatter for coach replies: paragraphs, "- " bullets and **bold**. */
 function Rich({ text }: { text: string }) {
@@ -97,7 +144,10 @@ export default function CoachPage() {
         ) : (
           <div key={r.id} className="coach-msg him">
             <div className="coach-avatar sm" aria-hidden>W</div>
-            <div className="bubble"><Rich text={r.text} /></div>
+            <div className="him-col">
+              <div className="bubble"><Rich text={r.text} /></div>
+              {r.proposal && <ProposalCard row={r} />}
+            </div>
           </div>
         ))}
         {rows?.some((r) => r.status === 'pending') && !issue && (
