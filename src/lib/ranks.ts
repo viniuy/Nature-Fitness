@@ -3,22 +3,22 @@ import { e1rm, hasSet } from './training';
 import type { Session } from './types';
 
 /**
- * Wood ranks, from a fresh twig to heartwood, coloured like a competitive
- * ladder: iron grey, bronze, silver, gold, platinum teal, emerald, diamond
- * blue, master purple, grandmaster red and a glowing top tier.
- * `min` is the percentile (vs lifters of the same bodyweight) a rank starts at.
+ * Ten tiers on a competitive-style ladder, each with its own colour and emblem
+ * (see RankBadge): the emblem grows from a plain iron plate to a winged,
+ * crowned Champion crest. `min` is the percentile (vs lifters of the same
+ * bodyweight) a rank starts at; `tier` is its 0-based step on the ladder.
  */
 export const RANKS = [
-  { id: 'twig', name: 'Twig', min: 0, rings: 1, color: '#6f7479', ink: '#f2f3f4' },
-  { id: 'sapling', name: 'Sapling', min: 10, rings: 2, color: '#a4673f', ink: '#fff3ea' },
-  { id: 'pine', name: 'Pine', min: 25, rings: 3, color: '#a9b6c1', ink: '#1f2a33' },
-  { id: 'oak', name: 'Oak', min: 40, rings: 4, color: '#d9a93f', ink: '#3d2a00' },
-  { id: 'teak', name: 'Teak', min: 55, rings: 5, color: '#3aa9a1', ink: '#f0fffd' },
-  { id: 'cedar', name: 'Cedar', min: 70, rings: 6, color: '#2fae6b', ink: '#effff6' },
-  { id: 'mahogany', name: 'Mahogany', min: 80, rings: 7, color: '#4f86ee', ink: '#f1f6ff' },
-  { id: 'ebony', name: 'Ebony', min: 90, rings: 8, color: '#9a5ce6', ink: '#f8f1ff' },
-  { id: 'ironwood', name: 'Ironwood', min: 96, rings: 9, color: '#d9443b', ink: '#fff1ef', glow: true },
-  { id: 'heartwood', name: 'Heartwood', min: 99, rings: 10, color: '#f3c74b', ink: '#3b2600', glow: true },
+  { id: 'iron', name: 'Iron', min: 0, tier: 0, color: '#6f7479', ink: '#f2f3f4' },
+  { id: 'bronze', name: 'Bronze', min: 10, tier: 1, color: '#a4673f', ink: '#fff3ea' },
+  { id: 'silver', name: 'Silver', min: 25, tier: 2, color: '#a9b6c1', ink: '#1f2a33' },
+  { id: 'gold', name: 'Gold', min: 40, tier: 3, color: '#d9a93f', ink: '#3d2a00' },
+  { id: 'platinum', name: 'Platinum', min: 55, tier: 4, color: '#3aa9a1', ink: '#f0fffd' },
+  { id: 'emerald', name: 'Emerald', min: 70, tier: 5, color: '#2fae6b', ink: '#effff6' },
+  { id: 'diamond', name: 'Diamond', min: 80, tier: 6, color: '#4f86ee', ink: '#f1f6ff' },
+  { id: 'master', name: 'Master', min: 90, tier: 7, color: '#9a5ce6', ink: '#f8f1ff' },
+  { id: 'grandmaster', name: 'Grandmaster', min: 96, tier: 8, color: '#d9443b', ink: '#fff1ef', glow: true },
+  { id: 'champion', name: 'Champion', min: 99, tier: 9, color: '#f3c74b', ink: '#3b2600', glow: true },
 ] as const;
 export type Rank = (typeof RANKS)[number];
 

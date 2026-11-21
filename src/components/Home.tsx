@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useMemo, useState } from 'react';
 import { useBodyStats } from '@/lib/hooks';
+import { RankBadge } from './RankBadge';
 import { rankFor, scoreMuscles, type Muscle } from '@/lib/ranks';
 import { hasSet, ymd } from '@/lib/training';
 import type { Program, Session } from '@/lib/types';
@@ -35,7 +36,7 @@ export function Home({ program, sessions, onPick }: { program: Program; sessions
         <BodyTarget targets={{ primary: [], secondary: [] }} colors={colors} view={view} zoom={false} className="home-fig" />
         <div className="home-rank">
           <Link href="/ranks/" className="home-rank-t">
-            {overall ? <><span className="home-dot" style={{ background: overall.color }} />{overall.name}</> : 'Ranks'}
+            {overall ? <><RankBadge rank={overall} size={30} />{overall.name}</> : 'Ranks'}
             <Icon name="right" size={13} />
           </Link>
           <button type="button" className="home-flip" onClick={() => setView(view === 'front' ? 'back' : 'front')}>

@@ -48,7 +48,7 @@ export default function RanksPage() {
         <section>
           {muscles.length > 0 && (
             <div className="rankhero">
-              <RankBadge rank={rankFor(overall)} size={40} />
+              <RankBadge rank={rankFor(overall)} size={64} />
               <div>
                 <div className="eyebrow">Overall</div>
                 <div className="name">{rankFor(overall).name}</div>
@@ -61,7 +61,7 @@ export default function RanksPage() {
             <div className="card" style={{ marginTop: 12 }}>
               {selected ? (
                 <div className="row" style={{ gap: 14, flexWrap: 'nowrap' }}>
-                  <RankBadge rank={selected.rank} size={40} />
+                  <RankBadge rank={selected.rank} size={52} />
                   <div style={{ minWidth: 0 }}>
                     <strong style={{ fontWeight: 600 }}>{MUSCLE_NAMES[sel]} · {selected.rank.name}</strong>
                     <div className="small muted">
@@ -78,7 +78,7 @@ export default function RanksPage() {
             <div className="rankladder">
               {RANKS.map((r, i) => (
                 <span key={r.id}>
-                  <RankBadge rank={r} size={26} />
+                  <RankBadge rank={r} size={46} />
                   <b>{r.name}</b>
                   <small>{i === RANKS.length - 1 ? `top ${100 - r.min}%` : i === 0 ? 'start' : `top ${100 - r.min}%`}</small>
                 </span>
