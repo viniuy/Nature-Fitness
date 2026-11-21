@@ -1,7 +1,7 @@
 'use client';
 
 import { db, getMeta, newId, saveRecord, setMeta, type CoachRow, type ProgramProposal } from './db';
-import { scoreMuscles, MUSCLE_NAMES } from './ranks';
+import { RANKS, scoreMuscles, MUSCLE_NAMES } from './ranks';
 import { supabase, syncConfigured } from './sync';
 import { fmtNum, hasSet } from './training';
 import type { BodyStat, Day, Exercise, Program, Session, Unit } from './types';
@@ -60,7 +60,7 @@ export async function buildContext(focusSessionId?: string): Promise<string> {
   if (bw) {
     const { muscles } = scoreMuscles(sessions, bw);
     if (muscles.length) {
-      out.push('\n## Strength ranks vs lifters of the same bodyweight (Twig < Sapling < Pine < Oak < Mahogany < Ironwood)');
+      out.push(`\n## Strength ranks vs lifters of the same bodyweight (${RANKS.map((r) => r.name).join(' < ')})`);
       out.push(muscles.sort((a, b) => b.percentile - a.percentile).map((m) => `${MUSCLE_NAMES[m.muscle]}: ${m.rank.name}, stronger than ${Math.round(m.percentile)}% (best: ${m.best.exercise})`).join('\n'));
     }
   }

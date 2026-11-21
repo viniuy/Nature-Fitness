@@ -966,3 +966,12 @@ button, [role='button'], .chip, .tabbar a, .sidebar a { user-select: none; -webk
   .home-body { width: 44%; left: 0; }
   .home-days { width: 52%; }
 }
+
+/* Rank badges: the top tiers glow */
+.rankbadge .rb-halo { filter: blur(5px); opacity: 0.75; animation: rb-pulse 2.8s ease-in-out infinite; transform-origin: center; }
+@keyframes rb-pulse { 50% { opacity: 0.35; } }
+@media (prefers-reduced-motion: reduce) { .rankbadge .rb-halo { animation: none; } }
+.rankladder { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px 4px; margin-top: 6px; }
+.rankladder span { display: flex; flex-direction: column; align-items: center; gap: 3px; text-align: center; min-width: 0; }
+.rankladder b { font-size: 11.5px; font-weight: 600; color: var(--ink); max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
+.rankladder small { font-size: 10px; color: var(--muted); }

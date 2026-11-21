@@ -2,14 +2,23 @@ import { STANDARDS, LEVEL_PERCENTILES, type Standard } from './standards';
 import { e1rm, hasSet } from './training';
 import type { Session } from './types';
 
-/** Wood ranks, from a fresh twig to ironwood, one of the hardest woods there is. */
+/**
+ * Wood ranks, from a fresh twig to heartwood, coloured like a competitive
+ * ladder: iron grey, bronze, silver, gold, platinum teal, emerald, diamond
+ * blue, master purple, grandmaster red and a glowing top tier.
+ * `min` is the percentile (vs lifters of the same bodyweight) a rank starts at.
+ */
 export const RANKS = [
-  { id: 'twig', name: 'Twig', min: 0, rings: 1, color: '#e6d6b4', ink: '#4a3520' },
-  { id: 'sapling', name: 'Sapling', min: 20, rings: 2, color: '#b9cf86', ink: '#2f4219' },
-  { id: 'pine', name: 'Pine', min: 40, rings: 3, color: '#e3b866', ink: '#4a3006' },
-  { id: 'oak', name: 'Oak', min: 60, rings: 4, color: '#b98149', ink: '#fff6e8' },
-  { id: 'mahogany', name: 'Mahogany', min: 80, rings: 5, color: '#8c3b22', ink: '#fff1e6' },
-  { id: 'ironwood', name: 'Ironwood', min: 95, rings: 6, color: '#3a2a22', ink: '#f6d48a' },
+  { id: 'twig', name: 'Twig', min: 0, rings: 1, color: '#6f7479', ink: '#f2f3f4' },
+  { id: 'sapling', name: 'Sapling', min: 10, rings: 2, color: '#a4673f', ink: '#fff3ea' },
+  { id: 'pine', name: 'Pine', min: 25, rings: 3, color: '#a9b6c1', ink: '#1f2a33' },
+  { id: 'oak', name: 'Oak', min: 40, rings: 4, color: '#d9a93f', ink: '#3d2a00' },
+  { id: 'teak', name: 'Teak', min: 55, rings: 5, color: '#3aa9a1', ink: '#f0fffd' },
+  { id: 'cedar', name: 'Cedar', min: 70, rings: 6, color: '#2fae6b', ink: '#effff6' },
+  { id: 'mahogany', name: 'Mahogany', min: 80, rings: 7, color: '#4f86ee', ink: '#f1f6ff' },
+  { id: 'ebony', name: 'Ebony', min: 90, rings: 8, color: '#9a5ce6', ink: '#f8f1ff' },
+  { id: 'ironwood', name: 'Ironwood', min: 96, rings: 9, color: '#d9443b', ink: '#fff1ef', glow: true },
+  { id: 'heartwood', name: 'Heartwood', min: 99, rings: 10, color: '#f3c74b', ink: '#3b2600', glow: true },
 ] as const;
 export type Rank = (typeof RANKS)[number];
 

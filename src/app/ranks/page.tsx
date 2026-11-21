@@ -75,9 +75,14 @@ export default function RanksPage() {
             </div>
           )}
           <div style={{ marginTop: 20 }}>
-            <div className="rankscale">{RANKS.map((r) => <span key={r.id} style={{ background: r.color }} />)}</div>
-            <div className="rankscale-labels">
-              {RANKS.map((r, i) => <span key={r.id}>{r.name}<small>{i === RANKS.length - 1 ? `top ${100 - r.min}%` : `${r.min}%+`}</small></span>)}
+            <div className="rankladder">
+              {RANKS.map((r, i) => (
+                <span key={r.id}>
+                  <RankBadge rank={r} size={26} />
+                  <b>{r.name}</b>
+                  <small>{i === RANKS.length - 1 ? `top ${100 - r.min}%` : i === 0 ? 'start' : `top ${100 - r.min}%`}</small>
+                </span>
+              ))}
             </div>
           </div>
         </section>
