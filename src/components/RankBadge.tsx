@@ -20,7 +20,7 @@ import type { Rank } from '@/lib/ranks';
  * metallic sheen on the top two tiers, not from blur.
  */
 
-const SCALE = [0.56, 0.6, 0.63, 0.65, 0.67, 0.67, 0.69, 0.69, 0.71, 0.73];
+const SCALE = [0.56, 0.6, 0.63, 0.65, 0.66, 0.66, 0.66, 0.66, 0.66, 0.66];
 const CHARCOAL = '#17181a';
 
 function mix(a: string, b: string, t: number) {
@@ -40,6 +40,30 @@ const PLATES = [
 ];
 const PLATE_FOR = [0, 1, 2, 2, 3, 3, 3, 4, 4, 4];
 const FIG_K = 1.65;
+
+/**
+ * The spiky crown of blades behind the shield from Platinum up. Each tier adds
+ * blades and makes them longer; the top tiers get a second, longer back row.
+ * Angles are measured clockwise from straight up; the top is left open for the lifter.
+ */
+const SPIKES: Record<number, { n: number; len: number; w: number; back?: { n: number; len: number } }> = {
+  4: { n: 4, len: 21, w: 4 },
+  5: { n: 6, len: 26, w: 4.4 },
+  6: { n: 6, len: 30, w: 4.8 },
+  7: { n: 8, len: 31, w: 5, back: { n: 7, len: 37 } },
+  8: { n: 10, len: 35, w: 5.6, back: { n: 9, len: 44 } },
+  9: { n: 12, len: 40, w: 6.2, back: { n: 11, len: 52 } },
+};
+function spikeRing(n: number, len: number, w: number, open = 38) {
+  return Array.from({ length: n }, (_, i) => {
+    const a = open + ((360 - 2 * open) * (i + 0.5)) / n;
+    const rad = (a * Math.PI) / 180;
+    // longest at the sides and the bottom point, a little shorter between
+    const L = len * (0.72 + 0.28 * Math.abs(Math.sin(rad)) + (Math.abs(a - 180) < 14 ? 0.08 : 0));
+    // a curved thorn: one edge bowed, the other straight, so the ring looks like it spins
+    return { a, d: `M${-w} 0 Q${-w * 0.2} ${-L * 0.45} 0 ${-L} L${w * 0.35} ${-L * 0.55} Q${w * 0.6} ${-L * 0.25} ${w} 0 Z` };
+  });
+}
 
 /** A path scaled about the origin, for the inner face of the plate. */
 function scalePath(d: string, k: number) {
@@ -78,9 +102,10 @@ const WINGS: Record<number, Wing[]> = {
  * dresses the Champion as a statue from the age of myths: a laurel wreath
  * and a red cape fastened with gold clasps.
  */
-function Lifter({ m, classical, fill, outline, line, wreath, crown }: {
+function Lifter({ m, classical, fill, outline, line, wreath, crown, pauldron }: {
   m: number; classical: boolean; fill: string; outline: string; line: string; wreath: string;
   crown: { points: number; fill: string; stroke: string } | null;
+  pauldron?: { n: number; len: number; fill: string; stroke: string } | null;
 }) {
   const sh = 0; // shoulder line
   const S = 4.2 + 3 * m; // half shoulder width
@@ -131,6 +156,17 @@ function Lifter({ m, classical, fill, outline, line, wreath, crown }: {
       <g fill={outline} stroke={outline} strokeWidth="1.1" strokeLinejoin="round">{shapes}</g>
       <g fill={fill}>{shapes}</g>
 
+      {/* spiked shoulder guards on the top tiers */}
+      {pauldron && [1, -1].map((g) => (
+        <g key={g} transform={`translate(${g * S} ${sh + 0.2}) scale(${g} 1)`}>
+          {Array.from({ length: pauldron.n }, (_, i) => {
+            const a = -20 + (70 * i) / Math.max(1, pauldron.n - 1);
+            return <path key={i} d={`M-1.2 0 L0 ${-pauldron.len} L1.2 0 Z`} transform={`rotate(${a})`} fill={pauldron.fill} stroke={pauldron.stroke} strokeWidth="0.25" />;
+          })}
+          <path d={`M${-delt * 0.9} 0.6 A${delt} ${delt} 0 0 1 ${delt * 0.9} 0.6 Z`} fill={pauldron.fill} stroke={pauldron.stroke} strokeWidth="0.3" />
+        </g>
+      ))}
+
       {/* muscle lines, once there is muscle to show */}
       <g fill="none" stroke={line} strokeOpacity={0.35 + 0.3 * m} strokeWidth="0.45" strokeLinecap="round">
         {m > 0.3 && [1, -1].map((g) => <path key={g} d={`M${g * (S + 1.2)} ${ey - arm * 0.2} Q${g * ((S + ex) / 2)} ${ey - arm - bi * 0.7} ${g * (ex - fore * 1.1)} ${ey - arm * 0.6}`} />)}
@@ -140,8 +176,8 @@ function Lifter({ m, classical, fill, outline, line, wreath, crown }: {
 
       {crown && (
         <path d={crown.points === 3
-          ? `M-2.4 ${headY - 2} L-2.8 ${headY - 5.2} L-1.2 ${headY - 3.8} L0 ${headY - 6.4} L1.2 ${headY - 3.8} L2.8 ${headY - 5.2} L2.4 ${headY - 2} Z`
-          : `M-2.8 ${headY - 2} L-3.4 ${headY - 5.6} L-1.9 ${headY - 4.2} L-1 ${headY - 6.8} L0 ${headY - 4.6} L1 ${headY - 6.8} L1.9 ${headY - 4.2} L3.4 ${headY - 5.6} L2.8 ${headY - 2} Z`}
+          ? `M-2.4 ${headY - 2} L-3.4 ${headY - 6.4} L-1.2 ${headY - 4} L0 ${headY - 8} L1.2 ${headY - 4} L3.4 ${headY - 6.4} L2.4 ${headY - 2} Z`
+          : `M-2.8 ${headY - 2} L-4.6 ${headY - 7.4} L-2 ${headY - 4.4} L-1.3 ${headY - 9} L0 ${headY - 5} L1.3 ${headY - 9} L2 ${headY - 4.4} L4.6 ${headY - 7.4} L2.8 ${headY - 2} Z`}
           fill={crown.fill} stroke={crown.stroke} strokeWidth="0.3" />
       )}
       {classical && (
@@ -228,7 +264,7 @@ export function RankBadge({ rank, size = 44 }: { rank: Rank; size?: number }) {
         </linearGradient>
       </defs>
 
-      <g transform={`translate(32 ${(41 + t * 0.2).toFixed(1)}) scale(${SCALE[t]})`} filter={`url(#${id('shadow')})`}>
+      <g transform={`translate(32 ${(41 + t * 0.2 - Math.max(0, t - 6) * 1.6).toFixed(1)}) scale(${SCALE[t]})`} filter={`url(#${id('shadow')})`}>
         {/* Wings, mirrored */}
         {wings.length > 0 && [1, -1].map((side) => (
           <g key={side} transform={`scale(${side} 1)`}>
@@ -243,6 +279,21 @@ export function RankBadge({ rank, size = 44 }: { rank: Rank; size?: number }) {
             }))}
           </g>
         ))}
+
+        {/* Spikes: the higher the rank, the more and the bigger */}
+        {SPIKES[t] && (
+          <g>
+            {SPIKES[t].back && spikeRing(SPIKES[t].back!.n, SPIKES[t].back!.len, SPIKES[t].w * 0.8, 30).map((x, i) => (
+              <path key={`b${i}`} d={x.d} transform={`translate(0 2) rotate(${x.a})`} fill={`url(#${id('rim')})`} stroke={darker} strokeOpacity="0.6" strokeWidth="0.5" />
+            ))}
+            {spikeRing(SPIKES[t].n, SPIKES[t].len, SPIKES[t].w).map((x, i) => (
+              <g key={`f${i}`} transform={`translate(0 2) rotate(${x.a})`}>
+                <path d={x.d} fill={`url(#${id('trim')})`} stroke={trim.dark} strokeOpacity="0.7" strokeWidth="0.5" />
+                <path d={`M${SPIKES[t].w * 0.2} -2 L0 ${-SPIKES[t].len * 0.8}`} stroke="#fff" strokeOpacity="0.4" strokeWidth="0.5" />
+              </g>
+            ))}
+          </g>
+        )}
 
         {/* Laurel */}
         {laurel && [1, -1].map((side) => (
@@ -269,7 +320,8 @@ export function RankBadge({ rank, size = 44 }: { rank: Rank; size?: number }) {
         {/* The lifter stands behind the shield, flexing over it, bigger every tier */}
         <g transform={`translate(0 ${(-26.5 - 1.5 * (t / 9)).toFixed(2)}) scale(${(FIG_K * (0.86 + 0.14 * (t / 9))).toFixed(3)})`}>
           <Lifter m={t / 9} classical={t === 9} fill={`url(#${id('fig')})`} outline={t === 9 ? '#5c4310' : mix(c, CHARCOAL, 0.75)} line={t === 9 ? '#7a5a18' : light} wreath="#3f7a3a"
-            crown={t === 7 || t === 8 ? { points: t === 7 ? 3 : 5, fill: `url(#${id('trim')})`, stroke: trim.dark } : null} />
+            crown={t === 7 || t === 8 ? { points: t === 7 ? 3 : 5, fill: `url(#${id('trim')})`, stroke: trim.dark } : null}
+            pauldron={t >= 6 ? { n: t - 3, len: 3 + (t - 6) * 1.9, fill: `url(#${id('trim')})`, stroke: trim.dark } : null} />
         </g>
 
         {/* Plate */}
