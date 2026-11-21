@@ -1,4 +1,4 @@
-export type IconName = 'dumbbell' | 'calendar' | 'chart' | 'body' | 'list' | 'gear' | 'up' | 'down' | 'left' | 'right' | 'trash' | 'plus' | 'camera' | 'medal';
+export type IconName = 'dumbbell' | 'calendar' | 'chart' | 'body' | 'list' | 'gear' | 'up' | 'down' | 'left' | 'right' | 'trash' | 'plus' | 'camera' | 'medal' | 'grip' | 'search' | 'edit' | 'x';
 
 const PATHS: Record<IconName, string> = {
   dumbbell: 'M6.5 6.5v11M17.5 6.5v11M3 9.5v5M21 9.5v5M6.5 12h11',
@@ -14,6 +14,10 @@ const PATHS: Record<IconName, string> = {
   trash: 'M4.5 7h15M10 11v6M14 11v6M6.5 7l1 13h9l1-13M9.5 7V4h5v3',
   plus: 'M12 5v14M5 12h14',
   medal: 'M12 21a6 6 0 1 0 0-12 6 6 0 0 0 0 12zM12 18a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM8.5 9.8 6 3h4l2 4.5L14 3h4l-2.5 6.8',
+  grip: 'M9 6h.01M15 6h.01M9 12h.01M15 12h.01M9 18h.01M15 18h.01',
+  search: 'M10.5 17a6.5 6.5 0 1 0 0-13 6.5 6.5 0 0 0 0 13zM15.5 15.5 20 20',
+  edit: 'M4 20h4L19 9l-4-4L4 16zM13.5 6.5l4 4',
+  x: 'M6 6l12 12M18 6 6 18',
   camera: 'M4 8h3.5L9 5.5h6L16.5 8H20v11H4zM12 16.5a3.2 3.2 0 1 0 0-6.4 3.2 3.2 0 0 0 0 6.4z',
 };
 
