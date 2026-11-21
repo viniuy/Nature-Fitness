@@ -827,7 +827,7 @@ button, [role='button'], .chip, .tabbar a, .sidebar a { user-select: none; -webk
 @media (prefers-reduced-motion: reduce) { .sheet, .sheet-wrap.closing .sheet { animation: nf-fade 160ms ease-out both; } }
 
 /* Coach (W.I.L.L.I.A.M) */
-.tabbar { grid-template-columns: repeat(7, 1fr); }
+/* tab count set below */
 .tabbar a, .sidebar a { position: relative; }
 .navdot { position: absolute; top: 10px; left: calc(50% + 8px); width: 8px; height: 8px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 0 2px var(--bg); }
 .sidebar .navdot { position: static; margin-left: auto; box-shadow: none; }
@@ -899,3 +899,12 @@ button, [role='button'], .chip, .tabbar a, .sidebar a { user-select: none; -webk
 .proposal.applied { border-color: color-mix(in srgb, var(--accent) 40%, var(--line)); }
 .proposal.dismissed { opacity: 0.7; }
 @media (prefers-reduced-motion: reduce) { .proposal { animation: none; } }
+
+/* ---------- Four-tab nav with sections ---------- */
+.tabbar { grid-template-columns: repeat(4, 1fr); padding: 0 12px env(safe-area-inset-bottom); }
+.tabbar a { font-size: 10.5px; gap: 3px; }
+.tabbar svg { width: 23px; height: 23px; }
+.subtabs { display: flex; gap: 2px; padding: 3px; margin: 0 0 18px; background: var(--surface-2); border-radius: 12px; max-width: 420px; }
+.subtabs a { flex: 1; text-align: center; padding: 7px 10px; border-radius: 9px; font-size: 14px; font-weight: 500; color: var(--muted); text-decoration: none; transition: background 220ms var(--spring), color 220ms; }
+.subtabs a[aria-current='page'] { background: var(--surface); color: var(--ink); font-weight: 600; box-shadow: 0 1px 3px rgb(0 0 0 / 0.08); }
+@media (min-width: 900px) { .subtabs { margin-top: 4px; } }

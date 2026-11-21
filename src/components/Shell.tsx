@@ -10,19 +10,45 @@ import { startCoach } from '@/lib/coach';
 import { Icon, type IconName } from './Icon';
 import { haptic } from '@/lib/haptics';
 
-const NAV: { href: string; label: string; icon: IconName }[] = [
+type Section = { href: string; label: string };
+type Tab = { href: string; label: string; icon: IconName; sections?: Section[] };
+
+// Four tabs. Progress and Workouts each hold a few screens, switched with a segmented control at the top.
+const NAV: Tab[] = [
   { href: '/', label: 'Today', icon: 'dumbbell' },
   { href: '/coach/', label: 'Coach', icon: 'coach' },
-  { href: '/history/', label: 'History', icon: 'calendar' },
-  { href: '/progress/', label: 'Progress', icon: 'chart' },
-  { href: '/ranks/', label: 'Ranks', icon: 'medal' },
-  { href: '/body/', label: 'Body', icon: 'body' },
-  { href: '/program/', label: 'Program', icon: 'list' },
+  { href: '/progress/', label: 'Progress', icon: 'chart', sections: [
+    { href: '/progress/', label: 'Lifts' },
+    { href: '/ranks/', label: 'Ranks' },
+    { href: '/body/', label: 'Body' },
+  ] },
+  { href: '/history/', label: 'Workouts', icon: 'calendar', sections: [
+    { href: '/history/', label: 'History' },
+    { href: '/program/', label: 'Program' },
+  ] },
 ];
 
 function isActive(path: string, href: string) {
   if (href === '/') return path === '/';
   return path.startsWith(href.replace(/\/$/, ''));
+}
+
+function tabFor(path: string) {
+  return NAV.find((t) => (t.sections ? t.sections.some((s) => isActive(path, s.href)) : isActive(path, t.href)));
+}
+
+/** Remembers the last screen opened inside each tab, so tapping the tab returns there. */
+const lastSection: Record<string, string> = {};
+
+function SubTabs({ tab, path }: { tab: Tab; path: string }) {
+  if (!tab.sections) return null;
+  return (
+    <nav className="subtabs" aria-label={tab.label}>
+      {tab.sections.map((s) => (
+        <Link key={s.href} href={s.href} replace aria-current={isActive(path, s.href) ? 'page' : undefined}>{s.label}</Link>
+      ))}
+    </nav>
+  );
 }
 
 export function SyncPill() {
@@ -48,6 +74,9 @@ export function SyncPill() {
 export function Shell({ children }: { children: ReactNode }) {
   const path = usePathname() || '/';
   const unread = useCoachUnread() && !isActive(path, '/coach/');
+  const tab = tabFor(path);
+  if (tab?.sections) lastSection[tab.href] = path;
+  const link = (t: Tab) => (t.sections && tab !== t ? lastSection[t.href] ?? t.href : t.href);
 
   useEffect(() => {
     void ensureSeed().then(startSync).then(startCoach);
@@ -73,7 +102,7 @@ export function Shell({ children }: { children: ReactNode }) {
           <div className="logo">Nature Fitness</div>
         </div>
         {NAV.map((n) => (
-          <Link key={n.href} href={n.href} aria-current={isActive(path, n.href) ? 'page' : undefined}>
+          <Link key={n.href} href={link(n)} aria-current={tab === n ? 'page' : undefined}>
             <Icon name={n.icon} />
             {n.label}
             {n.href === '/coach/' && unread && <span className="navdot" aria-label="New reply" />}
@@ -96,12 +125,13 @@ export function Shell({ children }: { children: ReactNode }) {
               </Link>
             </div>
           </div>
+          {tab?.sections && <SubTabs tab={tab} path={path} />}
           <div className="page" key={path}>{children}</div>
         </main>
       </div>
       <nav className="tabbar" aria-label="Main">
         {NAV.map((n) => (
-          <Link key={n.href} href={n.href} aria-current={isActive(path, n.href) ? 'page' : undefined}>
+          <Link key={n.href} href={link(n)} aria-current={tab === n ? 'page' : undefined}>
             <Icon name={n.icon} />
             {n.label}
             {n.href === '/coach/' && unread && <span className="navdot" aria-label="New reply" />}
